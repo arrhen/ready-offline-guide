@@ -59,6 +59,10 @@ struct StorageView: View {
                 } footer: {
                     Text("Models are large, so Wi-Fi is recommended.")
                 }
+                Section {
+                    NavigationLink("About & legal") { AboutView() }
+                    NavigationLink("Support Ready") { TipJarView() }
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)

@@ -2,7 +2,7 @@
 
 A free, open-source iPhone app that answers practical "what do I do?" questions with no signal, no account and no network. Download a small language model once, then everything runs on the device.
 
-> **Status:** early. The device check, model recommendation, and verified model downloads and a basic chat with the downloaded model work. Answers have no sources yet, so they can be wrong. See [SPEC.md](SPEC.md).
+> **Status:** early. Chat is a developer preview and is hidden in release builds until guides and citations land. The device check, model recommendation, and verified model downloads and a basic chat with the downloaded model work. Answers have no sources yet, so they can be wrong. See [SPEC.md](SPEC.md).
 
 ## What it will do
 
@@ -30,7 +30,7 @@ The rules that map a phone to a model live in `Packages/ReadyCore/Sources/ReadyC
 
 ## Not a medical device
 
-A small model can be wrong. Ready always shows its sources, and for anything serious you should call your local emergency number.
+A small model can be wrong. Once guides are included, Ready will show the source for what it tells you. For anything serious, call your local emergency number.
 
 ## Support
 

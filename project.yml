@@ -7,11 +7,23 @@ options:
 packages:
   ReadyCore:
     path: Packages/ReadyCore
+schemes:
+  Ready:
+    build:
+      targets:
+        Ready: all
+    run:
+      storeKitConfiguration: App/Ready/Ready.storekit
+    test:
+      targets: []
 targets:
   Ready:
     type: application
     platform: iOS
-    sources: [App/Ready]
+    sources:
+      - path: App/Ready
+        excludes:
+          - Ready.storekit   # local test products; the scheme uses it, the app must not ship it
     dependencies:
       - package: ReadyCore
     settings:
@@ -20,6 +32,7 @@ targets:
         PRODUCT_NAME: Ready
         INFOPLIST_KEY_CFBundleDisplayName: Ready
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: "0.1.0"

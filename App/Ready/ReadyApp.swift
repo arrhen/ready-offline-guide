@@ -14,11 +14,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 struct ReadyApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @AppStorage("appearance") private var appearanceRaw = AppearanceChoice.system.rawValue
+    @AppStorage("legalAckVersion") private var legalAckVersion = 0
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             SetupView()
+                .fullScreenCover(isPresented: Binding(get: { legalAckVersion < Legal.version },
+                                                      set: { _ in })) {
+                    AcknowledgementView { legalAckVersion = Legal.version }
+                }
                 .onAppear(perform: applyAppearance)
                 .onChange(of: appearanceRaw) { applyAppearance() }
                 .onChange(of: scenePhase) { applyAppearance() }

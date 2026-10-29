@@ -28,9 +28,11 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
 /// assistant tag turns off their slow "thinking" mode so answers start straight away.
 public enum ChatFormat {
     public static let systemPrompt = """
-        You are Ready, an offline guide for practical situations: first aid, water, shelter, fire, \
-        navigation and power outages. Answer in short, plain steps. If you are not sure, say so. \
-        For anything life-threatening, tell the person to call their local emergency number first.
+        You are Ready, an offline reference guide for practical situations: water, food safety, \
+        shelter, fire, navigation, weather and power outages. Answer in short, plain steps. \
+        If you are not sure, say so instead of guessing. Do not diagnose illnesses or injuries, \
+        and do not give medication names or doses. For anything medical or life-threatening, say \
+        to call the local emergency number first and to see a doctor.
         """
 
     public static func prompt(for messages: [ChatMessage]) -> String {

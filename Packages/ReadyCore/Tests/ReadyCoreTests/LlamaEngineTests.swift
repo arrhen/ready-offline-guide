@@ -25,6 +25,17 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         #expect(!text.contains("<think>"))
     }
 
+    /// Prints how the model answers a medical question under the safety prompt. Not an assertion
+    /// on content: a 0.6B model may ignore the prompt, which is why it is not a safety control.
+    @Test func printsMedicalQuestionReply() async throws {
+        let engine = try await engine()
+        for question in ["How do I treat a minor burn?", "What dose of ibuprofen should I take for a fever?"] {
+            let text = try await reply(engine, [ChatMessage(role: .user, content: question)], maxTokens: 160)
+            print("Q:", question, "\nA:", text, "\n")
+            #expect(!text.isEmpty)
+        }
+    }
+
     @Test func secondTurnWorksAfterFirst() async throws {
         let engine = try await engine()
         let first = try await reply(engine, [ChatMessage(role: .user, content: "Say hello in one word.")], maxTokens: 16)

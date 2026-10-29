@@ -83,8 +83,19 @@ struct ChatView: View {
                 .foregroundStyle(isUser ? Color.white : Color.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .textSelection(.enabled)
+                .contextMenu {
+                    if !isUser, !message.content.isEmpty,
+                       let url = Legal.reportURL(question: question(before: message), answer: message.content) {
+                        Link(destination: url) { Label("Report this answer", systemImage: "flag") }
+                    }
+                }
             if !isUser { Spacer(minLength: 40) }
         }
+    }
+
+    private func question(before message: ChatMessage) -> String? {
+        guard let index = session.messages.firstIndex(where: { $0.id == message.id }), index > 0 else { return nil }
+        return session.messages[index - 1].content
     }
 
     /// Small models answer in Markdown, so show bold and italics instead of raw asterisks.

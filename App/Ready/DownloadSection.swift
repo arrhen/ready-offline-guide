@@ -18,7 +18,11 @@ struct DownloadSection: View {
         Section {
             if downloader.isInstalled(model) {
                 Label("Installed. Works fully offline.", systemImage: "checkmark.circle.fill")
-                NavigationLink("Ask Ready") { ChatView(model: model, settings: settings) }
+                // Chat has no sources yet, so it stays out of release builds until guides and
+                // citations land.
+                #if DEBUG
+                NavigationLink("Ask Ready (preview)") { ChatView(model: model, settings: settings) }
+                #endif
             } else {
                 switch downloader.states[model.id] {
                 case nil:
