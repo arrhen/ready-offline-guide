@@ -7,3 +7,6 @@ DerivedData/
 *.gguf
 *.xcuserstate
 .env*
+*.xcodeproj
+.build/
+.swiftpm/

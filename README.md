@@ -2,7 +2,7 @@
 
 A free, open-source iPhone app that answers practical "what do I do?" questions with no signal, no account and no network. Download a small language model once, then everything runs on the device.
 
-> **Status:** planning. Nothing is built yet. See [SPEC.md](SPEC.md).
+> **Status:** early. The device check and model recommendation screen work; downloading and answering are not built yet. See [SPEC.md](SPEC.md).
 
 ## What it will do
 
@@ -10,6 +10,18 @@ A free, open-source iPhone app that answers practical "what do I do?" questions 
 - **Ask:** a small on-device model answers from those guides and shows the passages it used. It is not a replacement for a professional or an emergency call.
 - **Set up in one tap:** the app checks your phone's memory and free space and recommends a model size and settings. Everything can be changed later.
 - **Fully offline** after the one-time download. No analytics, no accounts, no tracking.
+
+## Build
+
+Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+
+```sh
+xcodegen generate
+open Ready.xcodeproj
+swift test --package-path Packages/ReadyCore   # recommendation rules
+```
+
+The rules that map a phone to a model live in `Packages/ReadyCore/Sources/ReadyCore/Recommender.swift`.
 
 ## Not a medical device
 
