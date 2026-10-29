@@ -27,3 +27,8 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         DEVELOPMENT_TEAM: ""
+      configs:
+        # The Best tier needs more memory than iOS normally allows an app. The capability needs a
+        # paid developer account, so Debug builds (including free Personal Teams) leave it out.
+        Release:
+          CODE_SIGN_ENTITLEMENTS: App/Ready/Ready.entitlements

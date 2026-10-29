@@ -4,11 +4,13 @@ import ReadyCore
 /// Download controls for the model currently picked on the setup screen.
 struct DownloadSection: View {
     let model: ModelOption
+    let settings: Settings
     let onStart: () -> Void
     private var downloader = ModelDownloader.shared
 
-    init(model: ModelOption, onStart: @escaping () -> Void) {
+    init(model: ModelOption, settings: Settings, onStart: @escaping () -> Void) {
         self.model = model
+        self.settings = settings
         self.onStart = onStart
     }
 
@@ -16,6 +18,7 @@ struct DownloadSection: View {
         Section {
             if downloader.isInstalled(model) {
                 Label("Installed. Works fully offline.", systemImage: "checkmark.circle.fill")
+                NavigationLink("Ask Ready") { ChatView(model: model, settings: settings) }
             } else {
                 switch downloader.states[model.id] {
                 case nil:

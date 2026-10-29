@@ -1,0 +1,127 @@
+import SwiftUI
+import ReadyCore
+
+struct ChatView: View {
+    let model: ModelOption
+    let settings: Settings
+
+    @State private var session = ChatSession()
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+    @Environment(\.scenePhase) private var scenePhase
+
+    #if targetEnvironment(simulator)
+    private let useGPU = false
+    #else
+    private let useGPU = true
+    #endif
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        Text("Answers come from a small model and can be wrong. In an emergency, call your local emergency number.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                        ForEach(session.messages) { message in
+                            bubble(message)
+                        }
+                        statusRow
+                        Color.clear.frame(height: 1).id("end")
+                    }
+                    .padding()
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: session.messages.last?.content) { proxy.scrollTo("end") }
+                .onChange(of: session.messages.count) { proxy.scrollTo("end") }
+            }
+            inputBar
+        }
+        .navigationTitle("Ask Ready")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            Button("New chat") { session.clear() }
+                .disabled(session.messages.isEmpty)
+        }
+        // Only the background frees the model. Control Center, the app switcher and call
+        // banners make the app inactive for a moment and shouldn't interrupt an answer.
+        .task(id: scenePhase == .background) {
+            if scenePhase == .background {
+                session.unload()
+            } else {
+                await session.load(model: model, settings: settings, useGPU: useGPU)
+            }
+        }
+        .onDisappear { session.unload() }
+    }
+
+    @ViewBuilder private var statusRow: some View {
+        switch session.status {
+        case .loading:
+            HStack { ProgressView(); Text("Loading \(model.name)…").padding(.leading, 8) }
+                .foregroundStyle(.secondary)
+        case .failed(let message):
+            VStack(alignment: .leading, spacing: 8) {
+                Text(message).foregroundStyle(.red)
+                Button("Try again") { Task { await session.load(model: model, settings: settings, useGPU: useGPU) } }
+            }
+        default:
+            EmptyView()
+        }
+        if let error = session.answerError {
+            Text(error).font(.footnote).foregroundStyle(.red)
+        }
+    }
+
+    private func bubble(_ message: ChatMessage) -> some View {
+        let isUser = message.role == .user
+        return HStack {
+            if isUser { Spacer(minLength: 40) }
+            Text(rendered(message))
+                .padding(10)
+                .background(isUser ? Color.accentColor : Color(.secondarySystemBackground))
+                .foregroundStyle(isUser ? Color.white : Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .textSelection(.enabled)
+            if !isUser { Spacer(minLength: 40) }
+        }
+    }
+
+    /// Small models answer in Markdown, so show bold and italics instead of raw asterisks.
+    private func rendered(_ message: ChatMessage) -> AttributedString {
+        if message.content.isEmpty { return AttributedString("…") }
+        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        return (try? AttributedString(markdown: message.content, options: options)) ?? AttributedString(message.content)
+    }
+
+    private var inputBar: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            TextField("Ask a question", text: $draft, axis: .vertical)
+                .lineLimit(1...5)
+                .focused($focused)
+                .padding(10)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+            if session.status == .generating {
+                Button { session.stop() } label: {
+                    Image(systemName: "stop.circle.fill").font(.title)
+                }
+                .accessibilityLabel("Stop")
+            } else {
+                Button(action: send) {
+                    Image(systemName: "arrow.up.circle.fill").font(.title)
+                }
+                .accessibilityLabel("Send")
+                .disabled(session.status != .ready || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    private func send() {
+        session.send(draft)
+        draft = ""
+    }
+}

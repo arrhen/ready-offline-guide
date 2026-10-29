@@ -41,7 +41,7 @@ struct SetupView: View {
                 if let choice = currentChoice {
                     Section("Models") {
                         ForEach(allOptions) { option in
-                            Button { chosenID = option.id } label: {
+                            Button { chosenID = option.id; selectedModelID = option.id } label: {
                                 modelRow(option, picked: option.id == choice.id,
                                          recommended: option.id == recommendation.primary?.id)
                             }
@@ -64,7 +64,7 @@ struct SetupView: View {
                     } footer: {
                         Text("You can change these any time.")
                     }
-                    DownloadSection(model: choice) { selectedModelID = choice.id }
+                    DownloadSection(model: choice, settings: settings) { selectedModelID = choice.id }
                 } else {
                     Section {
                         Text("There isn't enough free space for a model. The Library still works without one.")
