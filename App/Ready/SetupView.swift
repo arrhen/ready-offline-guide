@@ -6,6 +6,8 @@ struct SetupView: View {
     @AppStorage("selectedModelID") private var selectedModelID = ""
     @AppStorage("selectedPreset") private var selectedPresetRaw = -1
     @State private var chosenID: String?
+    @State private var showStorage = false
+    private var downloader = ModelDownloader.shared
 
     private var ramClass: RAMClass { RAMClass(physicalMemoryBytes: device.physicalMemoryBytes) }
     private var recommendation: Recommendation { Recommender.recommend(for: device) }
@@ -62,16 +64,7 @@ struct SetupView: View {
                     } footer: {
                         Text("You can change these any time.")
                     }
-                    Section {
-                        Button(selectedModelID == choice.id ? "Selected" : "Use \(choice.name)") {
-                            selectedModelID = choice.id
-                        }
-                        .disabled(selectedModelID == choice.id)
-                    } footer: {
-                        if selectedModelID == choice.id {
-                            Text("Downloading arrives in the next update.")
-                        }
-                    }
+                    DownloadSection(model: choice) { selectedModelID = choice.id }
                 } else {
                     Section {
                         Text("There isn't enough free space for a model. The Library still works without one.")
@@ -83,7 +76,14 @@ struct SetupView: View {
                 }
             }
             .navigationTitle("Ready")
+            .toolbar {
+                Button("Storage") { showStorage = true }
+            }
+            .sheet(isPresented: $showStorage, onDismiss: { device = DeviceProfile.current() }) {
+                StorageView()
+            }
             .onAppear { device = DeviceProfile.current() }
+            .onChange(of: downloader.installedIDs) { device = DeviceProfile.current() }
         }
     }
 
@@ -95,7 +95,7 @@ struct SetupView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(option.tier.label): \(option.name)").font(.headline)
-                Text(recommended ? "Recommended for your phone · \(option.license)" : option.license)
+                Text(subtitle(option, recommended: recommended))
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Spacer()
@@ -104,6 +104,23 @@ struct SetupView: View {
                 .foregroundStyle(picked ? Color.accentColor : Color.secondary)
         }
         .contentShape(Rectangle())
+    }
+
+    private func subtitle(_ option: ModelOption, recommended: Bool) -> String {
+        var parts: [String] = []
+        if downloader.isInstalled(option) {
+            parts.append("Installed")
+        } else if let state = downloader.states[option.id] {
+            switch state {
+            case .downloading(let p): parts.append("Downloading \(Int((p * 100).rounded()))%")
+            case .paused: parts.append("Paused")
+            case .verifying: parts.append("Checking")
+            case .failed: parts.append("Download failed")
+            }
+        }
+        if recommended { parts.append("Recommended for your phone") }
+        parts.append(option.license)
+        return parts.joined(separator: " · ")
     }
 
     private func bytes(_ n: Int64) -> String {

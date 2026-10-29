@@ -12,42 +12,69 @@ public enum Tier: Int, CaseIterable, Comparable, Sendable {
         case .best: "Best"
         }
     }
+
+    init?(name: String) {
+        switch name {
+        case "tiny": self = .tiny
+        case "balanced": self = .balanced
+        case "best": self = .best
+        default: return nil
+        }
+    }
 }
 
 public struct ModelOption: Identifiable, Equatable, Sendable {
     public var id: String
     public var name: String
     public var tier: Tier
-    /// Approximate download size. Placeholder until models are benchmarked and pinned.
+    /// Exact file size; also used to confirm a download is complete.
     public var downloadBytes: Int64
     /// Approximate memory in use while answering (weights plus working memory).
     public var runtimeBytes: Int64
     public var license: String
+    /// Hugging Face repository the file comes from, shown for attribution.
+    public var source: String
+    /// Pinned to a commit, so the file can't change underneath the checksum.
+    public var downloadURL: URL
+    public var sha256: String
 
-    public init(id: String, name: String, tier: Tier, downloadBytes: Int64,
-                runtimeBytes: Int64, license: String) {
+    public init(id: String, name: String, tier: Tier, downloadBytes: Int64, runtimeBytes: Int64,
+                license: String, source: String, downloadURL: URL, sha256: String) {
         self.id = id
         self.name = name
         self.tier = tier
         self.downloadBytes = downloadBytes
         self.runtimeBytes = runtimeBytes
         self.license = license
+        self.source = source
+        self.downloadURL = downloadURL
+        self.sha256 = sha256
     }
 }
 
 public enum ModelCatalog {
-    private static let gb: Int64 = 1_000_000_000
+    private struct Entry: Decodable {
+        var id: String
+        var name: String
+        var tier: String
+        var license: String
+        var source: String
+        var url: URL
+        var sha256: String
+        var downloadBytes: Int64
+        var runtimeBytes: Int64
+    }
 
-    /// Draft shortlist. Sizes are estimates for 4-bit GGUF builds; URLs and SHA-256 hashes
-    /// get added in `models.json` when the download manager lands.
-    public static let all: [ModelOption] = [
-        ModelOption(id: "qwen3-0.6b-q4", name: "Qwen3 0.6B", tier: .tiny,
-                    downloadBytes: gb / 2, runtimeBytes: gb * 7 / 10, license: "Apache 2.0"),
-        ModelOption(id: "qwen3-1.7b-q4", name: "Qwen3 1.7B", tier: .balanced,
-                    downloadBytes: gb * 11 / 10, runtimeBytes: gb * 3 / 2, license: "Apache 2.0"),
-        ModelOption(id: "qwen3-4b-q4", name: "Qwen3 4B", tier: .best,
-                    downloadBytes: gb * 5 / 2, runtimeBytes: gb * 33 / 10, license: "Apache 2.0"),
-    ]
+    /// Loaded from `models.json`. A malformed catalog is a packaging bug, caught by tests.
+    public static let all: [ModelOption] = {
+        let url = Bundle.module.url(forResource: "models", withExtension: "json")!
+        let entries = try! JSONDecoder().decode([Entry].self, from: Data(contentsOf: url))
+        return entries.map {
+            ModelOption(id: $0.id, name: $0.name, tier: Tier(name: $0.tier)!,
+                        downloadBytes: $0.downloadBytes, runtimeBytes: $0.runtimeBytes,
+                        license: $0.license, source: $0.source, downloadURL: $0.url, sha256: $0.sha256)
+        }
+    }()
 
     public static func option(for tier: Tier) -> ModelOption {
         all.first { $0.tier == tier }!

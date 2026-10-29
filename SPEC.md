@@ -29,7 +29,7 @@ Rule: model weights plus KV cache stay under about 50-60% of RAM. Keep at least 
 
 | Device RAM | Default tier | Context | Notes |
 |---|---|---|---|
-| 4 GB | Tiny (~0.5 GB) | 2k | Only tier offered |
+| 4 GB | Tiny (~0.4 GB) | 2k | Only tier offered |
 | 6 GB | Balanced (~1 GB) | 4k | Tiny also offered |
 | 8 GB+ | Best (~2.5 GB) | 4-8k | Balanced also offered; uses extended memory entitlement |
 
@@ -37,7 +37,7 @@ Presets: **Battery saver**, **Balanced**, **Best quality** set context length, a
 
 ## Models (shortlist, to be benchmarked)
 
-Prefer Apache 2.0 / MIT: Qwen3 (0.6B, 1.7B, 4B), SmolLM. Llama and Gemma carry use-restriction terms; offer as optional downloads or skip. Record every model's license, source URL and SHA-256 in `models.json`.
+Prefer Apache 2.0 / MIT: Qwen3 (0.6B, 1.7B, 4B), SmolLM. Llama and Gemma carry use-restriction terms; offer as optional downloads or skip. Every model's license, source repository, size, pinned download URL and SHA-256 live in `Packages/ReadyCore/Sources/ReadyCore/Resources/models.json`. URLs point at a specific commit so the file cannot change under its checksum. Current files are 4-bit (Q4_K_M) GGUF builds of Qwen3 0.6B and 1.7B (unsloth) and 4B (Qwen).
 
 ## Content (shortlist, licenses to verify before bundling)
 

@@ -2,7 +2,7 @@
 
 A free, open-source iPhone app that answers practical "what do I do?" questions with no signal, no account and no network. Download a small language model once, then everything runs on the device.
 
-> **Status:** early. The device check and model recommendation screen work; downloading and answering are not built yet. See [SPEC.md](SPEC.md).
+> **Status:** early. The device check, model recommendation, and verified model downloads work; answering is not built yet. See [SPEC.md](SPEC.md).
 
 ## What it will do
 
