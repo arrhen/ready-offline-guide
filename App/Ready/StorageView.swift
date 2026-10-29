@@ -4,6 +4,7 @@ import ReadyCore
 struct StorageView: View {
     @Bindable private var downloader = ModelDownloader.shared
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("appearance") private var appearanceRaw = AppearanceChoice.system.rawValue
     @State private var free = DeviceProfile.current().freeStorageBytes
 
     private var installed: [ModelOption] {
@@ -17,6 +18,16 @@ struct StorageView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Picker("Appearance", selection: $appearanceRaw) {
+                        ForEach(AppearanceChoice.allCases, id: \.rawValue) { Text($0.label).tag($0.rawValue) }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Appearance")
+                } footer: {
+                    Text("System follows your phone's light or dark setting.")
+                }
                 Section("Downloaded models") {
                     if installed.isEmpty {
                         Text("No models downloaded yet.").foregroundStyle(.secondary)
@@ -49,7 +60,7 @@ struct StorageView: View {
                     Text("Models are large, so Wi-Fi is recommended.")
                 }
             }
-            .navigationTitle("Storage")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
         }

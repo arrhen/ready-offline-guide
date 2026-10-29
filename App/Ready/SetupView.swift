@@ -77,7 +77,7 @@ struct SetupView: View {
             }
             .navigationTitle("Ready")
             .toolbar {
-                Button("Storage") { showStorage = true }
+                Button("Settings") { showStorage = true }
             }
             .sheet(isPresented: $showStorage, onDismiss: { device = DeviceProfile.current() }) {
                 StorageView()

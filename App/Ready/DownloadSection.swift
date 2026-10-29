@@ -53,7 +53,7 @@ struct DownloadSection: View {
             if !downloader.isInstalled(model) {
                 Text(downloader.allowsCellular
                      ? "Downloads can use cellular data."
-                     : "Downloads use Wi-Fi only. Change this in Storage.")
+                     : "Downloads use Wi-Fi only. Change this in Settings.")
             }
         }
     }
