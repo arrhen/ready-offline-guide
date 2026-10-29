@@ -25,7 +25,7 @@ whether to publish under a company rather than a personal account.
 | Implied government affiliation or trademark conflict (Ready.gov / FEMA, Army) | No agency names, logos or seals used as branding; sources are credited as sources only | Trademark search for "Ready: Offline Guide" |
 | App Review 1.4.1 (medical) | "Check with a doctor" reminder, sources shown, disclaimer on first run and in the chat | Add review notes explaining the app |
 | App Review 1.2 (generated content) | Published contact address, per-answer "Report this answer" | A reliable output filter isn't possible on-device; explain in review notes |
-| Donations (3.1.1, 3.2.2) | Optional tip jar through in-app purchase, unlocks nothing; no donation link inside the app | Needs the paid developer programme and products set up in App Store Connect |
+| Donations (3.1.1, 3.2.2) | Optional tip jar through in-app purchase, unlocks nothing; GitHub Sponsors link shown inside the app on the US storefront only (storefront checked in code, hidden if unknown) | Needs the paid developer programme and products set up in App Store Connect |
 | Privacy | Nothing leaves the device except user-started model/content downloads, and a report email the person sends themselves | Privacy policy page, "Data Not Collected" label |
 | Warranty and open-source terms | MIT licence ("as is"), plus an in-app notice | Lawyer to confirm wording |
 | Third-party licences | llama.cpp (MIT) and Qwen3 (Apache 2.0) credited in THIRD_PARTY_NOTICES.md | Add CC BY-SA attribution if any Wikipedia-derived pack ships |
@@ -46,8 +46,9 @@ number is always shown with "or the local emergency number where you are".
 - 3.2.2(iv): collecting funds for charities inside an app is not allowed unless approved as a
   nonprofit; Ready is not a charity, so tips go to the developer and are described that way.
 - 3.1.1(a) / 3.1.3: outside the US storefront, an in-app button or link that sends people to
-  another payment method is not allowed. So: **tip jar inside the app via in-app purchase;
-  GitHub Sponsors on the website and README only.**
+  another payment method is not allowed. So: **tip jar inside the app via in-app purchase everywhere, plus a
+  GitHub Sponsors link inside the app on the US storefront only; Sponsors on the website and
+  README.** Recheck the US external-link rule just before each submission; it has been contested.
 
 ## Before release
 

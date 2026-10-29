@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import ReadyCore
 
 /// Optional tips for the developer, through in-app purchase as App Review requires.
 /// Tips unlock nothing: the app is the same for everyone.
@@ -15,8 +16,12 @@ final class TipStore {
 
     private(set) var products: [Product] = []
     private(set) var phase: Phase = .loading
+    /// True only on the US storefront, where Apple allows a link to another payment method.
+    private(set) var showsExternalLink = false
 
     func load() async {
+        let storefront = await Storefront.current
+        showsExternalLink = Donations.showsExternalLink(storefrontCountryCode: storefront?.countryCode)
         do {
             products = try await Product.products(for: Self.productIDs).sorted { $0.price < $1.price }
             phase = products.isEmpty ? .unavailable : .ready
@@ -53,6 +58,15 @@ struct TipJarView: View {
         List {
             Section {
                 Text("Ready is free and open source, and always will be. If it's useful to you, you can leave a tip for the developer. Tips unlock nothing and aren't tax-deductible donations to a charity.")
+            }
+            if store.showsExternalLink {
+                Section {
+                    Link(destination: Donations.sponsorsURL) {
+                        Label("Sponsor on GitHub", systemImage: "arrow.up.right.square")
+                    }
+                } footer: {
+                    Text("Opens GitHub in your browser. Pick whichever way you prefer.")
+                }
             }
             Section {
                 switch store.phase {
