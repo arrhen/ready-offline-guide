@@ -1,6 +1,6 @@
 # Ready: Offline Guide: Spec (draft)
 
-Store name: **Ready: Offline Guide**. Home-screen name: **Ready** (`CFBundleDisplayName`). Reserve the name in App Store Connect and check USPTO class 9 before submitting. "Ready.gov" is FEMA's campaign, so avoid anything that implies government affiliation.
+Store name: **Ready: Offline Search** (first, files-only release; "Offline Guide" was the original name, to revisit when guides ship). Home-screen name: **Ready** (`CFBundleDisplayName`). Reserve the name in App Store Connect and check USPTO class 9 before submitting. "Ready.gov" is FEMA's campaign, so avoid anything that implies government affiliation.
 
 ## Goals
 

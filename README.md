@@ -1,4 +1,4 @@
-# Ready: Offline Guide
+# Ready: Offline Search
 
 A free, open-source iPhone app that answers practical "what do I do?" questions with no signal, no account and no network. Download a small language model once, then everything runs on the device.
 

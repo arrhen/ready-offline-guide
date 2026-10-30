@@ -39,9 +39,9 @@ bumped, and the app opens on the home screen with no "Guides" section.
 
 ## Store listing (draft)
 
-**Name.** "Ready: Offline Guide" promises built-in guides, which this release does not have. Until guides
-ship, something like "Ready: Offline Search" matches what the app does. Check the name's availability
-and the trademark note in OUTREACH.md before choosing.
+**Name.** "Ready: Offline Search" (chosen). It matches what the first release does. "Offline Guide" would
+promise built-in guides, which this release does not have; revisit the name when guides ship. Check
+availability in App Store Connect and the trademark note in OUTREACH.md before reserving it.
 
 **Subtitle (30 characters).** Search your own files offline
 

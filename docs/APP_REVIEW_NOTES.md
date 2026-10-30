@@ -7,8 +7,8 @@ or the "Add files" row. Accept the one-time notice, choose a text or PDF file (a
 attached), then search a word from it, for example "spare key". The passage appears under "From your files".
 Settings has the iCloud backup toggle and "Delete all my files". There is no login. There are no accounts.
 
-**What the app is.** Ready: Offline Guide is a free, open-source reference app. After a one-time,
-user-started download of a small language model, it works fully offline. It collects no data and
+**What the app is.** Ready: Offline Search is a free, open-source app that searches text, Markdown and PDF files the
+user adds, fully offline. It collects no data and
 has no accounts. Source: https://github.com/arrhen/ready-offline-guide
 
 **Health and safety content (Guideline 1.4).** The app shows a notice on first launch and in
