@@ -4,6 +4,32 @@ Status as of 2026-10-29. "Verify" means the licence basis must be confirmed from
 itself (front matter or the site's own notice) before it is bundled. Each shipped guide records
 its source URL, retrieval date and licence basis.
 
+## How a guide gets into a release
+
+Every guide in `Guides/` has front matter recording publisher, source page, the date the source
+was last updated, the date we copied it, and the licence basis. `clearance: pending` is the
+default. A guide is changed to `clearance: cleared` only when:
+
+1. The numbers and steps were compared against the source page line by line (the tests also pin
+   the key figures).
+2. The page was checked for third-party material (images, quoted text) and none is reproduced.
+3. The agency's own reuse or copyright statement was read, or the agency confirmed in writing.
+4. The date is recent enough that the guidance is unlikely to have changed.
+
+`scripts/check-release.sh` fails if any guide is not cleared. Debug builds show uncleared guides
+(marked as such); release builds hide them and cannot answer from them.
+
+## Guides in the repo now
+
+| Guide | Source | Source updated | Status |
+|---|---|---|---|
+| Making water safe in an emergency | EPA, Emergency Disinfection of Drinking Water | 2026-02-24 | pending. EPA's disclaimer page describes document copyright in hedged terms ("freely distributed and used for non-commercial, scientific and educational purposes... Individual documents... may have different copyright conditions"). The app has an optional tip jar, so whether it counts as "non-commercial" is an open question for EPA or a lawyer. The stronger basis is 17 U.S.C. 105 (EPA says its disclaimers are a catalogue that applies to a given work only where stated). Get written confirmation or a lawyer's view before clearing |
+| Power outages | Ready.gov (FEMA / DHS) | 2026-06-04 | pending. FEMA's copyright page returned an access error, so its reuse statement is unread |
+
+Known gaps in retrieval: the search is word-based, so questions phrased with words the guide does not use (for example "is it safe to run a generator indoors", where the guide says "outdoors and at least 20 feet away") get "no guide". That is the safe direction. Fix by adding a `keywords:` field per section, and by using the same stemmer in the filter as in the index.
+
+CDC and USDA FSIS pages blocked automated fetching (HTTP 403), so they were not included.
+
 ## Use (after verification)
 
 US federal agency web pages and publications are works of the US government and not subject to

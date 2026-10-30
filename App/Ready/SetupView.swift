@@ -32,6 +32,13 @@ struct SetupView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink { LibraryView() } label: {
+                        Label("Library", systemImage: "books.vertical")
+                    }
+                } footer: {
+                    Text("Read the guides any time, with no model and no network.")
+                }
                 Section("Your phone") {
                     row("Memory", "\(ramClass.rawValue) GB class")
                     row("Free space", bytes(device.freeStorageBytes))

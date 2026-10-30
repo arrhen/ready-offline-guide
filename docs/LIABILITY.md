@@ -19,7 +19,7 @@ whether to publish under a company rather than a personal account.
 
 | Risk | What the app does | Open |
 |---|---|---|
-| Small model gives wrong advice (it already has, e.g. wrong burn and warmth advice) | Chat is labelled as possibly wrong; answers will cite guides (milestone 4); system prompt tells the model to defer to emergency services and avoid dosing/diagnosis | Don't ship bare chat. Re-test every model change against a fixed question set |
+| Small model gives wrong advice (ungrounded, it did: wrong burn and ibuprofen answers) | Questions are answered only from retrieved guide excerpts; no excerpt means no model call and a "no guide" reply; the excerpt is shown under every answer; chat labelled as possibly wrong | Re-test every model change against a fixed question set; a model can still misparaphrase an excerpt |
 | Outdated medical guidance | Medical content is limited to current, dated, cited sources; every guide shows its date | Decide whether to include first-aid treatment content at all before launch |
 | Copyright or distribution limits on content | Only content with a documented licence basis; provenance recorded per guide (see CONTENT_SOURCES.md) | Check each document's own front matter, not just a website's claim |
 | Implied government affiliation or trademark conflict (Ready.gov / FEMA, Army) | No agency names, logos or seals used as branding; sources are credited as sources only | Trademark search for "Ready: Offline Guide" |
@@ -33,6 +33,16 @@ whether to publish under a company rather than a personal account.
 | Export compliance | HTTPS only; `ITSAppUsesNonExemptEncryption` is set to NO in the build | Confirm with the lawyer / App Store Connect questions |
 
 ## Release gating
+
+Guides are `pending` until cleared (see CONTENT_SOURCES.md). `scripts/check-release.sh` must pass
+before an App Store build. Release builds hide uncleared guides, so until a guide is cleared the app
+has nothing to answer from.
+
+Answers are grounded: the app searches the guides first and gives the model only the matching
+excerpts. If no excerpt covers the question the model is not asked; the app says it has no guide
+and shows the emergency number. Every answer shows the guide passage under it. Testing on the 0.6B
+model showed it keeps numbers from excerpts when given them, but a model can still paraphrase
+wrongly, so the passage text is always shown and the summary is labelled as machine-written.
 
 Chat has no sources yet, so "Ask Ready" is compiled into Debug builds only. Release builds show the
 installed model and nothing to ask until guides, retrieval and citations ship.

@@ -1,0 +1,10 @@
+{
+  "packId": "core",
+  "formatVersion": 1,
+  "bytes": 65536,
+  "sha256": "62cd4e11234fe5a8d4cad22374e30cfd871f3aa36c139648ac3b3521a9b5a7f7",
+  "guides": [
+    "power-outage",
+    "water-emergency"
+  ]
+}

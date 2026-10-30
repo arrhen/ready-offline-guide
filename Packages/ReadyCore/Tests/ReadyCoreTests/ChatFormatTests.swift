@@ -24,6 +24,26 @@ import Testing
         #expect(prompt.components(separatedBy: "<|im_start|>assistant").count == 3)
     }
 
+    @Test func excerptsGoIntoTheUserTurnAndTheSystemPromptSaysToStayWithinThem() {
+        let prompt = ChatFormat.prompt(for: [
+            ChatMessage(role: .user, content: "How long do I boil water?", context: "[1] Water - Boiling\nBoil for one minute."),
+        ])
+        #expect(prompt.contains("Guide excerpts:\n[1] Water - Boiling\nBoil for one minute.\n\nQuestion: How long do I boil water?"))
+        #expect(ChatFormat.systemPrompt.contains("ONLY those excerpts"))
+        #expect(ChatFormat.systemPrompt.contains("exactly as written"))
+    }
+
+    @Test func onlyTheLatestQuestionCarriesExcerpts() {
+        let prompt = ChatFormat.prompt(for: [
+            ChatMessage(role: .user, content: "first", context: "OLD EXCERPT"),
+            ChatMessage(role: .assistant, content: "answer"),
+            ChatMessage(role: .user, content: "second", context: "NEW EXCERPT"),
+        ])
+        #expect(!prompt.contains("OLD EXCERPT"))
+        #expect(prompt.contains("NEW EXCERPT"))
+        #expect(prompt.contains("<|im_start|>user\nfirst<|im_end|>"))
+    }
+
     @Test func utf8SplitHoldsBackIncompleteCharacter() {
         // "é" is C3 A9; feed the first byte alone, then the rest.
         var bytes = Data("ok".utf8) + Data([0xC3])

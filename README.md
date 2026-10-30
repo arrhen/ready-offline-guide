@@ -2,7 +2,7 @@
 
 A free, open-source iPhone app that answers practical "what do I do?" questions with no signal, no account and no network. Download a small language model once, then everything runs on the device.
 
-> **Status:** early. Chat is a developer preview and is hidden in release builds until guides and citations land. The device check, model recommendation, and verified model downloads and a basic chat with the downloaded model work. Answers have no sources yet, so they can be wrong. See [SPEC.md](SPEC.md).
+> **Status:** early. Two guides (water, power outages) are in the repo and marked pending review. Chat answers only from guides and shows the passage it used. Chat and uncleared guides are hidden in release builds. The device check, model recommendation, and verified model downloads and a basic chat with the downloaded model work. Answers have no sources yet, so they can be wrong. See [SPEC.md](SPEC.md).
 
 ## What it will do
 
@@ -24,13 +24,19 @@ swift test --package-path Packages/ReadyCore   # recommendation rules
 
 `scripts/setup-llama.sh` exists because llama.cpp publishes iOS device and macOS builds but no Simulator build. It checks the official build against a pinned SHA-256 and builds the Simulator slice from the same release tag.
 
-To run the tests against a real model: `READY_TEST_MODEL=/path/to/Qwen3-0.6B-Q4_K_M.gguf swift test --package-path Packages/ReadyCore`.
+To run the tests against a real model: `READY_TEST_MODEL=/path/to/Qwen3-0.6B-Q4_K_M.gguf swift test --package-path Packages/ReadyCore --no-parallel`.
 
 The rules that map a phone to a model live in `Packages/ReadyCore/Sources/ReadyCore/Recommender.swift`.
 
+## Guides
+
+Guides live in `Guides/` as Markdown with source and licence details in the front matter.
+`scripts/build-pack.py` turns them into a SQLite search index; `scripts/check-release.sh` fails if
+any guide has not been cleared for release. See `docs/CONTENT_SOURCES.md`.
+
 ## Not a medical device
 
-A small model can be wrong. Once guides are included, Ready will show the source for what it tells you. For anything serious, call your local emergency number.
+A small model can be wrong. Ready answers only from its guides and shows the guide passage under every answer. For anything serious, call your local emergency number.
 
 ## Support
 

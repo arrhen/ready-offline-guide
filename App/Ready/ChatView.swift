@@ -74,6 +74,19 @@ struct ChatView: View {
     }
 
     private func bubble(_ message: ChatMessage) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            bubbleText(message)
+            ForEach(Array(message.sources.enumerated()), id: \.element.id) { index, passage in
+                SourcePassageView(passage: passage, startsOpen: index == 0)
+            }
+            if !message.sources.isEmpty, !message.content.isEmpty {
+                Text("The summary above was written by a small model and can be wrong. The guide text is what to rely on.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func bubbleText(_ message: ChatMessage) -> some View {
         let isUser = message.role == .user
         return HStack {
             if isUser { Spacer(minLength: 40) }
@@ -134,5 +147,29 @@ struct ChatView: View {
     private func send() {
         session.send(draft)
         draft = ""
+    }
+}
+
+/// A guide passage under an answer. The first one starts open so the real text is seen first.
+struct SourcePassageView: View {
+    let passage: Passage
+    @State private var expanded: Bool
+
+    init(passage: Passage, startsOpen: Bool) {
+        self.passage = passage
+        _expanded = State(initialValue: startsOpen)
+    }
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $expanded) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(passage.section.body).textSelection(.enabled)
+                SourceCredit(guide: passage.guide)
+            }
+            .font(.footnote)
+        } label: {
+            Label("From the guide: \(passage.guide.title), \(passage.section.heading)", systemImage: "doc.text")
+                .font(.footnote)
+        }
     }
 }

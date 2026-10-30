@@ -84,14 +84,14 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         try store.prepare()
         try FileManager.default.createSymbolicLink(at: store.fileURL(for: model),
                                                    withDestinationURL: URL(fileURLWithPath: modelPath!))
-        let session = ChatSession()
+        let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) })
         await session.load(model: model, store: store,
                            settings: Recommender.settings(for: .batterySaver, ramClass: .gb4), useGPU: false)
         return session
     }
 
     private func finish(_ session: ChatSession) async throws {
-        for _ in 0..<600 where session.status == .generating { try await Task.sleep(for: .milliseconds(100)) }
+        for _ in 0..<4000 where session.status == .generating { try await Task.sleep(for: .milliseconds(100)) }
     }
 
     @Test func failedAnswerLeavesChatReadyAndNextSendWorks() async throws {
@@ -103,12 +103,53 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         #expect(session.status == .ready)
         #expect(session.answerError != nil)
 
-        session.send("Say hi in one word.")
+        session.send("How long should I boil water?")
         #expect(session.answerError == nil)
         try await finish(session)
         #expect(session.status == .ready)
         #expect(session.messages.last?.role == .assistant)
         #expect(session.messages.last?.content.isEmpty == false)
+    }
+
+    @Test func uncoveredQuestionGetsTheNoGuideReplyWithoutTheModel() async throws {
+        let session = try await session()
+        session.send("How do I treat a burn?")
+        // Answered immediately and synchronously: no generation was started.
+        #expect(session.status == .ready)
+        #expect(session.messages.last?.content.hasPrefix("I don't have a guide") == true)
+        #expect(session.messages.last?.sources.isEmpty == true)
+    }
+
+    @Test func coveredQuestionIsAnsweredWithSourcesAttached() async throws {
+        let session = try await session()
+        session.send("How long should I boil water?")
+        try await finish(session)
+        let answer = try #require(session.messages.last)
+        #expect(!answer.sources.isEmpty)
+        #expect(answer.sources.allSatisfy { $0.guide.id == "water-emergency" })
+        print("ANSWER:", answer.content)
+        #expect(!answer.content.isEmpty)
+    }
+
+    @Test func poisoningQuestionGetsTheEmergencyReplyWithoutSourcesOrModel() async throws {
+        let session = try await session()
+        session.send("I drank water with bleach in it, what do I do?")
+        #expect(session.status == .ready)
+        let reply = try #require(session.messages.last)
+        #expect(reply.content.contains("can't help"))
+        #expect(reply.sources.isEmpty)
+    }
+
+    @Test func secondTurnPromptDoesNotCarryTheFirstTurnsExcerpts() async throws {
+        let session = try await session()
+        session.send("How long should I boil water?")
+        try await finish(session)
+        session.send("Where can I use a generator?")
+        try await finish(session)
+        let user = session.messages.filter { $0.role == .user }
+        #expect(user.count == 2)
+        let prompt = ChatFormat.prompt(for: Array(session.messages.dropLast()))
+        #expect(prompt.components(separatedBy: "Guide excerpts:").count == 2)
     }
 
     @Test func unloadWhileLoadingDropsTheEngine() async throws {
@@ -125,5 +166,25 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         session.unload()
         await loading
         #expect(session.status == .idle)
+    }
+}
+
+/// Prints how the model answers from real excerpts, for a person to read. Content is not asserted
+/// because a small model can drift; this is why the source passages are always shown too.
+@Suite(.enabled(if: modelPath != nil)) @MainActor struct GroundedAnswerPrintTests {
+    @Test func printsGroundedAnswers() async throws {
+        let model = ModelCatalog.option(for: .tiny)
+        let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        let store = ModelStore(directory: dir)
+        try store.prepare()
+        try FileManager.default.createSymbolicLink(at: store.fileURL(for: model), withDestinationURL: URL(fileURLWithPath: modelPath!))
+        for question in ["How long should I boil water?", "How much bleach do I add to a gallon of water?", "Where can I use a generator?", "How long does food stay cold in a freezer?"] {
+            let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) })
+            await session.load(model: model, store: store, settings: Recommender.settings(for: .balanced, ramClass: .gb6), useGPU: false)
+            session.send(question)
+            for _ in 0..<4000 where session.status == .generating { try await Task.sleep(for: .milliseconds(100)) }
+            let a = try #require(session.messages.last)
+            print("Q:", question, "\nSOURCES:", a.sources.map { "\($0.guide.id)/\($0.section.heading)" }, "\nA:", a.content, "\n")
+        }
     }
 }

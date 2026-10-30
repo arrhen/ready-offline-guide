@@ -20,7 +20,17 @@ public final class ChatSession {
     /// False once `unload()` runs, so a load that finishes afterwards is dropped.
     @ObservationIgnored private var wantsLoaded = false
 
-    public init() {}
+    /// The guides answers come from. Nil means nothing can be answered.
+    @ObservationIgnored private let pack: GuidePack?
+
+    public init(pack: GuidePack? = GuidePack.bundled()) {
+        self.pack = pack
+    }
+
+    /// Shown instead of an answer when no guide covers the question. The model is not asked.
+    public static func noGuideReply(emergency: String) -> String {
+        "I don't have a guide that covers that, so I won't guess. Ready only answers from the guides it includes. Try different words, or browse the Library. In an emergency, call \(emergency)."
+    }
 
     /// Loads the model. Does nothing if one is already loaded.
     public func load(model: ModelOption, store: ModelStore = ModelStore(), settings: Settings, useGPU: Bool) async {
@@ -63,8 +73,26 @@ public final class ChatSession {
     public func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let engine, status == .ready, !trimmed.isEmpty else { return }
-        messages.append(ChatMessage(role: .user, content: trimmed))
-        messages.append(ChatMessage(role: .assistant, content: ""))
+        let emergency = EmergencyNumber.phrase(forRegion: Locale.current.region?.identifier)
+        // Emergency-type questions never reach search or the model.
+        if SafetyScreen.triggers(trimmed) {
+            messages.append(ChatMessage(role: .user, content: trimmed))
+            messages.append(ChatMessage(role: .assistant, content: SafetyScreen.reply(emergency: emergency)))
+            answerError = nil
+            return
+        }
+        let passages = pack?.search(trimmed) ?? []
+        guard !passages.isEmpty else {
+            messages.append(ChatMessage(role: .user, content: trimmed))
+            messages.append(ChatMessage(role: .assistant, content: Self.noGuideReply(emergency: emergency)))
+            answerError = nil
+            return
+        }
+        let excerpts = passages.enumerated().map { i, p in
+            "[\(i + 1)] \(p.guide.title) - \(p.section.heading)\n\(p.section.body)"
+        }.joined(separator: "\n\n")
+        messages.append(ChatMessage(role: .user, content: trimmed, context: excerpts))
+        messages.append(ChatMessage(role: .assistant, content: "", sources: passages))
         status = .generating
         answerError = nil
         let history = Array(messages.dropLast())
