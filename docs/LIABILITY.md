@@ -44,7 +44,7 @@ and shows the emergency number. Every answer shows the guide passage under it. T
 model showed it keeps numbers from excerpts when given them, but a model can still paraphrase
 wrongly, so the passage text is always shown and the summary is labelled as machine-written.
 
-Chat has no sources yet, so "Ask Ready" is compiled into Debug builds only. Release builds show the
+Chat has no sources yet, so the chat screen ("Ready when you are") is compiled into Debug builds only. Release builds show the
 installed model and nothing to ask until guides, retrieval and citations ship.
 
 The emergency number comes from the region setting, which is not the phone's location, so a known

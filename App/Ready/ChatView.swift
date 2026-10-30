@@ -37,7 +37,7 @@ struct ChatView: View {
             }
             inputBar
         }
-        .navigationTitle("Ask Ready")
+        .navigationTitle("Ready when you are")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button("New chat") { session.clear() }
@@ -120,7 +120,7 @@ struct ChatView: View {
 
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField("Ask a question", text: $draft, axis: .vertical)
+            TextField("What do you need to know?", text: $draft, axis: .vertical)
                 .lineLimit(1...5)
                 .focused($focused)
                 .padding(10)

@@ -21,7 +21,7 @@ struct DownloadSection: View {
                 // Chat has no sources yet, so it stays out of release builds until guides and
                 // citations land.
                 #if DEBUG
-                NavigationLink("Ask Ready (preview)") { ChatView(model: model, settings: settings) }
+                NavigationLink("Ready when you are (preview)") { ChatView(model: model, settings: settings) }
                 #endif
             } else {
                 switch downloader.states[model.id] {
