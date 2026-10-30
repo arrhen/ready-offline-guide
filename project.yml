@@ -49,7 +49,7 @@ targets:
         SWIFT_VERSION: "6.0"
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         TARGETED_DEVICE_FAMILY: "1"
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: R9ACZFAZ2U
       # The increased-memory-limit entitlement (App/Ready/Ready.entitlements) is for the 4B model on 8 GB
       # phones. Release builds have no model yet, so they do not request it. Restore this block when
       # models ship, and enable the capability for the App ID in the developer portal first:
