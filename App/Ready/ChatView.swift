@@ -90,12 +90,12 @@ struct ChatView: View {
             ForEach(Array(message.fileSources.enumerated()), id: \.element.id) { index, passage in
                 UserPassageView(passage: passage, startsOpen: message.sources.isEmpty && index == 0)
             }
-            if message.role == .assistant, hasSources, !message.content.isEmpty {
+            if message.role == .assistant, hasSources, !message.content.isEmpty, !message.isFixedReply {
                 Label("Machine-written summary. Check the text above.", systemImage: "exclamationmark.triangle")
                     .font(.caption).foregroundStyle(.orange)
             }
             bubbleText(message)
-            if hasSources, !message.content.isEmpty {
+            if hasSources, !message.content.isEmpty, !message.isFixedReply {
                 Text("The summary was written by a small model and can be wrong. The text above is what to rely on.")
                     .font(.caption).foregroundStyle(.secondary)
             }

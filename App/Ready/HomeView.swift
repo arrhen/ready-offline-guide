@@ -127,13 +127,22 @@ struct HomeView: View {
                 Text(ChatSession.noGuideReply(emergency: emergencyNumberText))
             }
         } else {
+            if findings.needsCaution {
+                Section {
+                    Label {
+                        Text(SafetyScreen.cautionNote(emergency: emergencyNumberText))
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                    }
+                }
+            }
             if !findings.guides.isEmpty {
                 Section {
                     ForEach(Array(findings.guides.enumerated()), id: \.element.id) { index, passage in
                         SourcePassageView(passage: passage, startsOpen: index == 0)
                     }
                     #if DEBUG
-                    shortAnswerLink
+                    if !findings.needsCaution { shortAnswerLink }
                     #endif
                 } header: {
                     Text("From the guides")
@@ -147,7 +156,7 @@ struct HomeView: View {
                         UserPassageView(passage: passage, startsOpen: index == 0 && findings.guides.isEmpty)
                     }
                     #if DEBUG
-                    if findings.guides.isEmpty { shortAnswerLink }
+                    if findings.guides.isEmpty, !findings.needsCaution { shortAnswerLink }
                     #endif
                 } header: {
                     Text("From your files")

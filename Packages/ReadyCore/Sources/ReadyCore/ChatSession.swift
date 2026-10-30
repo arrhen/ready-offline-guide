@@ -75,18 +75,27 @@ public final class ChatSession {
 
     public func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let engine, status == .ready, !trimmed.isEmpty else { return }
+        // Fixed replies (emergency, caution, no match) need no model, so only a busy session refuses them.
+        guard !trimmed.isEmpty, status != .generating, status != .loading else { return }
         let emergency = EmergencyNumber.phrase(forRegion: Locale.current.region?.identifier)
         let findings = Lookup.run(trimmed, pack: pack, library: library)
         if findings.isEmergency {
             messages.append(ChatMessage(role: .user, content: trimmed))
-            messages.append(ChatMessage(role: .assistant, content: SafetyScreen.reply(emergency: emergency)))
+            messages.append(ChatMessage(role: .assistant, content: SafetyScreen.reply(emergency: emergency), isFixedReply: true))
             answerError = nil
             return
         }
         if findings.isEmpty {
             messages.append(ChatMessage(role: .user, content: trimmed))
-            messages.append(ChatMessage(role: .assistant, content: Self.noGuideReply(emergency: emergency)))
+            messages.append(ChatMessage(role: .assistant, content: Self.noGuideReply(emergency: emergency), isFixedReply: true))
+            answerError = nil
+            return
+        }
+        if findings.needsCaution {
+            // Show what was found with a warning. The model is not asked, so nothing is summarized.
+            messages.append(ChatMessage(role: .user, content: trimmed))
+            messages.append(ChatMessage(role: .assistant, content: SafetyScreen.cautionNote(emergency: emergency),
+                                        sources: findings.guides, fileSources: findings.yours, isFixedReply: true))
             answerError = nil
             return
         }
@@ -97,6 +106,7 @@ public final class ChatSession {
         excerpts += findings.yours.enumerated().map { i, p in
             "[\(offset + i + 1)] A file the person added: \(p.documentTitle) - \(p.heading)\n\(p.body)"
         }
+        guard let engine, status == .ready else { return }
         messages.append(ChatMessage(role: .user, content: trimmed, context: excerpts.joined(separator: "\n\n")))
         messages.append(ChatMessage(role: .assistant, content: "", sources: findings.guides, fileSources: findings.yours))
         status = .generating

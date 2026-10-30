@@ -263,12 +263,46 @@ private func makePDF(pages: [String?], in dir: URL, userPassword: String? = nil,
 }
 
 @Suite struct EmergencyScreenWithFilesTests {
-    /// Documents a real problem: audience words trip the emergency screen, so a person's own pet or
-    /// child care notes are answered with a 911 message. Kept as a visible fact until the screen is split.
-    @Test func everydayQuestionsAboutPetsOrChildrenCurrentlyTripTheScreen() {
-        for q in ["how do I house-train a dog", "what should my baby eat at camp", "is my cat allowed in the tent"] {
-            #expect(SafetyScreen.triggers(q), Comment(rawValue: q))
+    @Test func audienceWordsAndMildSymptomsGetACautionNotARefusal() {
+        for q in ["how do I house-train a dog", "what should my baby eat at camp", "is my cat allowed in the tent",
+                  "can I give my dog this water", "my child has a fever"] {
+            #expect(SafetyScreen.level(q) == .caution, Comment(rawValue: q))
+            #expect(!SafetyScreen.triggers(q), Comment(rawValue: q))
         }
+    }
+
+    @Test func realEmergencySignalsStillBlockEvenWithAudienceWords() {
+        for q in ["my kid swallowed bleach", "my dog drank bleach water", "baby not breathing", "what dose of bleach is safe for a child",
+                  "I drank water with bleach in it"] {
+            #expect(SafetyScreen.level(q) == .emergency, Comment(rawValue: q))
+        }
+    }
+
+    @Test func ordinaryQuestionsAreClear() {
+        for q in ["how long to boil water", "where can I use a generator", "how do I tie a bowline knot"] {
+            #expect(SafetyScreen.level(q) == .clear, Comment(rawValue: q))
+        }
+    }
+
+    @Test func aCautionQuestionStillFindsPassagesButFlagsThem() throws {
+        let library = try tempLibrary()
+        try library.add(document("Dog notes", "House-train a dog by taking it outside after meals and after sleeping."))
+        let found = Lookup.run("how do I house-train a dog", pack: nil, library: library)
+        #expect(!found.isEmergency)
+        #expect(found.needsCaution)
+        #expect(found.yours.first?.documentTitle == "Dog notes")
+    }
+
+    @MainActor @Test func aCautionQuestionInChatShowsPassagesWithNoModelSummary() async throws {
+        let library = try tempLibrary()
+        try library.add(document("Dog notes", "House-train a dog by taking it outside after meals."))
+        let session = ChatSession(pack: nil, library: library)
+        session.send("how do I house-train a dog")
+        let reply = try #require(session.messages.last)
+        #expect(reply.isFixedReply)
+        #expect(!reply.fileSources.isEmpty)
+        #expect(reply.content.contains("hasn't summarized it"))
+        #expect(session.status == .idle)
     }
 
     @Test func theLibraryRecordsASchemaVersion() throws {

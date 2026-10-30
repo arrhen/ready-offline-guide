@@ -22,15 +22,18 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
     public var sources: [Passage]
     /// Passages from files the person added, shown under an answer with their own label.
     public var fileSources: [UserPassage]
+    /// True for text the app wrote (a warning or a refusal), not text the model wrote.
+    public var isFixedReply: Bool
 
     public init(id: UUID = UUID(), role: ChatRole, content: String, context: String? = nil,
-                sources: [Passage] = [], fileSources: [UserPassage] = []) {
+                sources: [Passage] = [], fileSources: [UserPassage] = [], isFixedReply: Bool = false) {
         self.id = id
         self.role = role
         self.content = content
         self.context = context
         self.sources = sources
         self.fileSources = fileSources
+        self.isFixedReply = isFixedReply
     }
 }
 

@@ -83,7 +83,6 @@ import Testing
             "my kid swallowed bleach",
             "someone is not breathing",
             "chest pain",
-            "can I give my dog this water",
             "what dose of bleach is safe to drink",
         ]
         for q in questions {

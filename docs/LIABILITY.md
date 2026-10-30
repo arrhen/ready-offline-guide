@@ -38,6 +38,15 @@ whether to publish under a company rather than a personal account.
 The on-device model is text in, text out, with no tools, network, links or memory. See
 CONTAINMENT.md for what enforces that and what does not.
 
+## The emergency screen has two levels
+
+Real emergency signals (poisoning, swallowed or drank something, not breathing, chest pain, overdose,
+doses, symptoms, diagnosis) always get a fixed reply and nothing is searched. Words that name who a
+question is about (child, baby, pet, dog, cat, pregnancy) or a mild symptom (sick, fever, vomiting,
+infection) show the matching passages with a warning banner and no model summary. The lists are in
+`SafetyScreen` and are tested; they are word lists and can miss phrasings, so keep extending them from
+real questions. When both kinds of word appear ("my kid swallowed bleach"), the emergency level wins.
+
 ## Release gating
 
 Guides are `pending` until cleared (see CONTENT_SOURCES.md). `scripts/check-release.sh` must pass

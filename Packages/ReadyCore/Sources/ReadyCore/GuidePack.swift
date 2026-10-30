@@ -168,33 +168,56 @@ public enum Retrieval {
     }
 }
 
-/// A fixed check run before any search or model call. Questions that look like a medical
-/// emergency, a poisoning or a request for symptoms or doses get a fixed reply, because word
-/// overlap with a guide does not mean the guide can answer them safely.
+public enum SafetyLevel: Equatable, Sendable {
+    /// Nothing to flag.
+    case clear
+    /// Worth a warning, not a refusal: the question names who it is for (a child, a pet, a pregnancy)
+    /// or a mild symptom. Passages are shown as written with a banner, and no model summary is made.
+    case caution
+    /// Looks like an emergency, a poisoning or a request for doses. Nothing is searched.
+    case emergency
+}
+
+/// A fixed check run before any search or model call. Word overlap with a guide does not mean the
+/// guide can answer a question safely, so real emergency signals always get a fixed reply.
 public enum SafetyScreen {
-    private static let phrases = [
+    private static let emergencyPhrases = [
         "chest pain", "heart attack", "not breathing", "can't breathe", "cant breathe", "cannot breathe",
         "passed out", "poison control", "carbon monoxide", "what do i do if", "what should i do if",
     ]
 
-    private static let stems: Set<String> = [
+    private static let emergencyStems: Set<String> = [
         "poison", "poisoned", "poisoning", "swallow", "swallowed", "drank", "drunk", "ingest", "ingested",
         "overdose", "overdosed", "symptom", "unconscious", "unresponsive", "faint", "fainted", "bleed",
         "bleeding", "seizure", "convulsion", "allergic", "anaphylaxis", "suicid", "suicide", "choke",
-        "choking", "stroke", "dose", "dosage", "dying", "died", "sick", "vomit", "vomiting", "diagnose",
-        "diagnosis", "infection", "infected", "fever", "pregnant", "pregnancy", "baby", "infant", "toddler",
-        "child", "children", "pet", "dog", "cat",
+        "choking", "stroke", "dose", "dosage", "dying", "died", "diagnose", "diagnosis",
     ]
 
-    public static func triggers(_ question: String) -> Bool {
+    /// Who the question is about, or a mild symptom. Passages are shown with a banner.
+    private static let cautionStems: Set<String> = [
+        "baby", "infant", "toddler", "child", "children", "kid", "kids", "pregnant", "pregnancy",
+        "pet", "dog", "cat", "sick", "vomit", "vomiting", "fever", "infection", "infected",
+    ]
+
+    public static func level(_ question: String) -> SafetyLevel {
         let lower = question.lowercased()
-        if phrases.contains(where: { lower.contains($0) }) { return true }
+        if emergencyPhrases.contains(where: { lower.contains($0) }) { return .emergency }
         let words = lower.split { !$0.isLetter && !$0.isNumber && $0 != "'" }.map(String.init)
-        return words.contains { stems.contains($0) || stems.contains(Retrieval.stem($0)) }
+        func matches(_ set: Set<String>) -> Bool {
+            words.contains { set.contains($0) || set.contains(Retrieval.stem($0)) }
+        }
+        if matches(emergencyStems) { return .emergency }
+        return matches(cautionStems) ? .caution : .clear
     }
+
+    public static func triggers(_ question: String) -> Bool { level(question) == .emergency }
 
     public static func reply(emergency: String) -> String {
         "This sounds like it could be a medical emergency, a poisoning, or something that needs a professional. Ready can't help with that. Call \(emergency) now, or your local poison control center. Don't wait for an answer here."
+    }
+
+    public static func cautionNote(emergency: String) -> String {
+        "This may involve a child, a pet, a pregnancy or an illness. What follows is the text of a guide or file, not advice for your situation, and Ready hasn't summarized it. If anyone could be in danger, call \(emergency) or a professional first."
     }
 }
 

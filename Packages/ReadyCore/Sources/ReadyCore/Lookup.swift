@@ -6,6 +6,9 @@ public struct Findings: Equatable, Sendable {
     public var isEmergency: Bool
     public var guides: [Passage]
     public var yours: [UserPassage]
+    /// True if the question names a child, a pet, a pregnancy or a mild symptom. Passages are shown
+    /// with a warning and no model summary is written.
+    public var needsCaution: Bool = false
 
     public var isEmpty: Bool { guides.isEmpty && yours.isEmpty }
 
@@ -17,9 +20,11 @@ public enum Lookup {
     /// passages that merely share words with it, whether they come from a guide or from a file.
     public static func run(_ question: String, pack: GuidePack?, library: UserLibrary?) -> Findings {
         let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
-        if SafetyScreen.triggers(trimmed) { return .emergency }
+        let level = SafetyScreen.level(trimmed)
+        if level == .emergency { return .emergency }
         return Findings(isEmergency: false,
                         guides: pack?.search(trimmed) ?? [],
-                        yours: library?.search(trimmed) ?? [])
+                        yours: library?.search(trimmed) ?? [],
+                        needsCaution: level == .caution)
     }
 }
