@@ -19,7 +19,7 @@ struct ReadyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SetupView()
+            HomeView()
                 .fullScreenCover(isPresented: Binding(get: { legalAckVersion < Legal.version },
                                                       set: { _ in })) {
                     AcknowledgementView { legalAckVersion = Legal.version }

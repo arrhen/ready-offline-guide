@@ -197,3 +197,20 @@ public enum SafetyScreen {
         "This sounds like it could be a medical emergency, a poisoning, or something that needs a professional. Ready can't help with that. Call \(emergency) now, or your local poison control center. Don't wait for an answer here."
     }
 }
+
+/// What the app does with a question. The emergency screen always runs first, so an
+/// emergency-type question never shows passages that merely share words with it.
+public enum LookupResult: Equatable, Sendable {
+    case emergency
+    case passages([Passage])
+    case noMatch
+}
+
+extension GuidePack {
+    public func lookup(_ question: String) -> LookupResult {
+        let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        if SafetyScreen.triggers(trimmed) { return .emergency }
+        let found = search(trimmed)
+        return found.isEmpty ? .noMatch : .passages(found)
+    }
+}

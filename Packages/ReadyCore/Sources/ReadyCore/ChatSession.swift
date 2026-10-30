@@ -29,7 +29,7 @@ public final class ChatSession {
 
     /// Shown instead of an answer when no guide covers the question. The model is not asked.
     public static func noGuideReply(emergency: String) -> String {
-        "I don't have a guide that covers that, so I won't guess. Ready only answers from the guides it includes. Try different words, or browse the Library. In an emergency, call \(emergency)."
+        "I don't have a guide that covers that, so I won't guess. Ready only answers from the guides it includes. Try different words, or browse the guides below. In an emergency, call \(emergency)."
     }
 
     /// Loads the model. Does nothing if one is already loaded.
@@ -74,19 +74,20 @@ public final class ChatSession {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let engine, status == .ready, !trimmed.isEmpty else { return }
         let emergency = EmergencyNumber.phrase(forRegion: Locale.current.region?.identifier)
-        // Emergency-type questions never reach search or the model.
-        if SafetyScreen.triggers(trimmed) {
+        let passages: [Passage]
+        switch pack?.lookup(trimmed) ?? .noMatch {
+        case .emergency:
             messages.append(ChatMessage(role: .user, content: trimmed))
             messages.append(ChatMessage(role: .assistant, content: SafetyScreen.reply(emergency: emergency)))
             answerError = nil
             return
-        }
-        let passages = pack?.search(trimmed) ?? []
-        guard !passages.isEmpty else {
+        case .noMatch:
             messages.append(ChatMessage(role: .user, content: trimmed))
             messages.append(ChatMessage(role: .assistant, content: Self.noGuideReply(emergency: emergency)))
             answerError = nil
             return
+        case .passages(let found):
+            passages = found
         }
         let excerpts = passages.enumerated().map { i, p in
             "[\(i + 1)] \(p.guide.title) - \(p.section.heading)\n\(p.section.body)"

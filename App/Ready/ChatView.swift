@@ -4,9 +4,12 @@ import ReadyCore
 struct ChatView: View {
     let model: ModelOption
     let settings: Settings
+    /// A question to answer as soon as the model has loaded, when opened from a search.
+    var initialQuestion: String?
 
     @State private var session = ChatSession()
     @State private var draft = ""
+    @State private var sentInitial = false
     @FocusState private var focused: Bool
     @Environment(\.scenePhase) private var scenePhase
 
@@ -37,7 +40,7 @@ struct ChatView: View {
             }
             inputBar
         }
-        .navigationTitle("Ready when you are")
+        .navigationTitle("Short answer")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button("New chat") { session.clear() }
@@ -50,6 +53,10 @@ struct ChatView: View {
                 session.unload()
             } else {
                 await session.load(model: model, settings: settings, useGPU: useGPU)
+                if let question = initialQuestion, !sentInitial, session.status == .ready {
+                    sentInitial = true
+                    session.send(question)
+                }
             }
         }
         .onDisappear { session.unload() }
@@ -75,6 +82,10 @@ struct ChatView: View {
 
     private func bubble(_ message: ChatMessage) -> some View {
         VStack(alignment: .leading, spacing: 8) {
+            if message.role == .assistant, !message.sources.isEmpty, !message.content.isEmpty {
+                Label("Machine-written summary. Check the guide text below.", systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.orange)
+            }
             bubbleText(message)
             ForEach(Array(message.sources.enumerated()), id: \.element.id) { index, passage in
                 SourcePassageView(passage: passage, startsOpen: index == 0)
@@ -120,7 +131,7 @@ struct ChatView: View {
 
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField("What do you need to know?", text: $draft, axis: .vertical)
+            TextField("Ask a follow-up", text: $draft, axis: .vertical)
                 .lineLimit(1...5)
                 .focused($focused)
                 .padding(10)

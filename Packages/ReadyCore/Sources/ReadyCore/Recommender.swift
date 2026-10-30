@@ -37,7 +37,7 @@ public struct Settings: Equatable, Sendable {
 }
 
 public struct Recommendation: Equatable, Sendable {
-    /// nil means no model fits: the Library still works on its own.
+    /// nil means no model fits: the guides still work on their own.
     public var primary: ModelOption?
     public var alternatives: [ModelOption]
     public var settings: Settings
@@ -83,7 +83,7 @@ public enum Recommender {
             notes.append("A smaller model is recommended to fit your free space.")
         }
         if primary == nil {
-            notes.append("Not enough free space for a model. The Library works without one.")
+            notes.append("Not enough free space for a model. The guides work without one.")
         }
 
         let alternatives = fitting.filter { $0.id != primary?.id }.sorted { $0.tier > $1.tier }

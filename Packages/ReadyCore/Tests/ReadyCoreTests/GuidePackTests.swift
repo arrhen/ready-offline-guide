@@ -95,6 +95,27 @@ import Testing
         #expect(!p.search("I drank water with bleach in it, what do I do?").isEmpty)
     }
 
+    // MARK: lookup (what home search and chat both use)
+
+    @Test func lookupRunsTheEmergencyScreenBeforeSearch() throws {
+        let p = try pack()
+        // Without the screen these return bleach-dose passages, which is worse shown bare.
+        #expect(p.lookup("I drank water with bleach in it, what do I do?") == .emergency)
+        #expect(p.lookup("What are the symptoms of carbon monoxide poisoning?") == .emergency)
+    }
+
+    @Test func lookupFindsPassagesForOrdinaryQuestions() throws {
+        guard case .passages(let found) = try pack().lookup("How long should I boil water?") else {
+            Issue.record("expected passages"); return
+        }
+        #expect(found.first?.guide.id == "water-emergency")
+    }
+
+    @Test func lookupSaysNoMatchWhenNothingCoversIt() throws {
+        #expect(try pack().lookup("How do I build a shelter?") == .noMatch)
+        #expect(try pack().lookup("   ") == .noMatch)
+    }
+
     @Test func ordinaryGuideQuestionsAreNotBlocked() {
         for q in ["How long should I boil water?", "How much bleach per gallon of water?",
                   "Where can I use a generator?", "How long does food stay cold in a freezer?"] {
