@@ -29,9 +29,37 @@ struct SetupView: View {
             ?? recommendation.primary
     }
 
+    /// The model chat should use: the one picked if it is installed, else the largest installed.
+    private var chatModel: ModelOption? {
+        if let choice = currentChoice, downloader.isInstalled(choice) { return choice }
+        return allOptions.filter { downloader.isInstalled($0) }.max { $0.tier < $1.tier }
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                // Chat has no sources until guides are reviewed, so it exists in preview
+                // builds only. It leads the screen so the first thing to do is obvious.
+                #if DEBUG
+                Section {
+                    if let model = chatModel {
+                        NavigationLink { ChatView(model: model, settings: settings) } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label("Ready when you are", systemImage: "bubble.left.and.text.bubble.right")
+                                    .font(.headline)
+                                Text("Ask a question. Answers come from the guides, with the passage shown.")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 6)
+                        }
+                    } else {
+                        Label("Download a model below to start a chat", systemImage: "arrow.down.circle")
+                            .foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("Preview build. Chat is not in the App Store version until the guides are reviewed.")
+                }
+                #endif
                 Section {
                     NavigationLink { LibraryView() } label: {
                         Label("Library", systemImage: "books.vertical")
@@ -71,7 +99,7 @@ struct SetupView: View {
                     } footer: {
                         Text("You can change these any time.")
                     }
-                    DownloadSection(model: choice, settings: settings) { selectedModelID = choice.id }
+                    DownloadSection(model: choice) { selectedModelID = choice.id }
                 } else {
                     Section {
                         Text("There isn't enough free space for a model. The Library still works without one.")
