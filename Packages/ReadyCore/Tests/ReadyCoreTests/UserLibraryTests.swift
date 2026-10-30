@@ -305,6 +305,32 @@ private func makePDF(pages: [String?], in dir: URL, userPassword: String? = nil,
         #expect(session.status == .idle)
     }
 
+    @Test func ownFilesOnlyReturnsFileTextAndNeverGuidesEvenForAnEmergencyQuestion() throws {
+        let library = try tempLibrary()
+        try library.add(document("My notes", "If someone drank water with bleach in it, my notes say to call poison control."))
+        let q = "I drank water with bleach in it"
+        // The normal path refuses...
+        let pack = try GuidePack(path: try #require(GuidePack.bundledURL).path, includesUncleared: true)
+        #expect(Lookup.run(q, pack: pack, library: library).isEmergency)
+        // ...and the opt-in path shows only the person's own text.
+        let own = Lookup.ownFilesOnly(q, library: library)
+        #expect(own.count == 1)
+        #expect(own.first?.documentTitle == "My notes")
+    }
+
+    @Test func ownFilesOnlyWithNoFilesOrNoLibraryIsEmpty() throws {
+        #expect(Lookup.ownFilesOnly("I drank bleach", library: nil).isEmpty)
+        #expect(Lookup.ownFilesOnly("I drank bleach", library: try tempLibrary()).isEmpty)
+    }
+
+    @Test func theConfirmationIsDefensiveAndNamesWhatItDoesNotDo() {
+        let text = Legal.emergencyFilesConfirmation(emergency: "911")
+        for phrase in ["Call 911 first", "not advice", "hasn't reviewed", "can't tell whether", "writes none of what it shows", "exactly as written"] {
+            #expect(text.contains(phrase), Comment(rawValue: phrase))
+        }
+        #expect(Legal.emergencyFilesBanner.contains("professional help"))
+    }
+
     @Test func theLibraryRecordsASchemaVersion() throws {
         let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         _ = try UserLibrary(directory: dir, defaults: UserDefaults(suiteName: UUID().uuidString)!)

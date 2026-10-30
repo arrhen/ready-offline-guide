@@ -47,6 +47,19 @@ infection) show the matching passages with a warning banner and no model summary
 `SafetyScreen` and are tested; they are word lists and can miss phrasings, so keep extending them from
 real questions. When both kinds of word appear ("my kid swallowed bleach"), the emergency level wins.
 
+## When the screen blocks a question, the person's own files are still reachable
+
+Under the fixed emergency reply there is an opt-in link ("Can't reach emergency services? Show text
+from my own files", shown only when the person has added files). It opens a confirmation (call first, not
+advice, not reviewed, cannot tell whether a passage applies, Ready writes none of it). Only after that
+are passages from the person's own files shown, exactly as written, under a banner and with the
+unreviewed label. No bundled guide is searched and no model is involved. The reasoning: refusing leaves
+a person with nothing if emergency services are unreachable, while Ready authoring emergency guidance
+would be its own advice. Their own text is their material and Ready only finds it. Keyword search can
+return a passage that does not answer the question, which is why the banner says so. `check-containment.sh`
+fails if `ownFilesOnly` ever touches guides or the model. A lawyer should confirm the wording, and an
+emergency card of reviewed fixed text for a few topics is a possible later addition (not built).
+
 ## Release gating
 
 Guides are `pending` until cleared (see CONTENT_SOURCES.md). `scripts/check-release.sh` must pass

@@ -12,6 +12,9 @@ struct HomeView: View {
     @State private var asked = ""
     @State private var findings: Findings?
     @State private var showSettings = false
+    // Emergency questions: the person can choose to see text from their own files.
+    @State private var showEmergencyConfirm = false
+    @State private var emergencyFiles: [UserPassage]?
     @FocusState private var fieldFocused: Bool
 
     // Your files
@@ -62,6 +65,14 @@ struct HomeView: View {
             } message: {
                 Text(Legal.importNotice)
             }
+            .confirmationDialog(Legal.emergencyFilesConfirmTitle, isPresented: $showEmergencyConfirm, titleVisibility: .visible) {
+                Button("Show text from my files") {
+                    emergencyFiles = Lookup.ownFilesOnly(asked, library: library)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(Legal.emergencyFilesConfirmation(emergency: emergencyNumberText))
+            }
             .fileImporter(isPresented: $showImporter, allowedContentTypes: Self.allowedTypes,
                           allowsMultipleSelection: true, onCompletion: handleImport)
             .onAppear {
@@ -93,6 +104,7 @@ struct HomeView: View {
                         query = ""
                         asked = ""
                         findings = nil
+                        emergencyFiles = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
@@ -109,6 +121,7 @@ struct HomeView: View {
         let question = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty else { return }
         asked = question
+        emergencyFiles = nil
         findings = Lookup.run(question, pack: pack, library: library)
         fieldFocused = false
     }
@@ -120,6 +133,27 @@ struct HomeView: View {
                     Text(SafetyScreen.reply(emergency: emergencyNumberText))
                 } icon: {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                }
+                if emergencyFiles == nil, !documents.isEmpty {
+                    Button(Legal.emergencyFilesButton) { showEmergencyConfirm = true }
+                        .font(.footnote)
+                }
+            }
+            if let emergencyFiles {
+                Section {
+                    Label {
+                        Text(Legal.emergencyFilesBanner)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                    }
+                    if emergencyFiles.isEmpty {
+                        Text("Nothing in your files matches. Call \(emergencyNumberText).")
+                    }
+                    ForEach(Array(emergencyFiles.enumerated()), id: \.element.id) { index, passage in
+                        UserPassageView(passage: passage, startsOpen: index == 0)
+                    }
+                } header: {
+                    Text("From your files")
                 }
             }
         } else if findings.isEmpty {

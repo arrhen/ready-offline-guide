@@ -73,6 +73,16 @@ public enum Legal {
     public static let importNoticeVersion = 1
     public static let importNotice = "Only add files you own or have permission to use. Ready keeps the text of what you add on this phone. It doesn't upload, share or back it up unless you choose, and it doesn't open locked files."
 
+    public static let emergencyFilesButton = "Can't reach emergency services? Show text from my own files"
+    public static let emergencyFilesConfirmTitle = "Show text from your files?"
+
+    /// Shown before text from the person's own files is displayed for an emergency-type question.
+    public static func emergencyFilesConfirmation(emergency: String) -> String {
+        "Call \(emergency) first if you can. Ready is not advice. It hasn't reviewed your files, can't tell whether a passage is correct or applies to this situation, and writes none of what it shows. It will only show text from files you added, exactly as written."
+    }
+
+    public static let emergencyFilesBanner = "Text from your own files, shown as written. Ready hasn't reviewed it and can't tell if it applies here. If anyone is in danger, get professional help as soon as you can."
+
     /// A pre-filled email for reporting a bad answer. The person sees and sends it themselves.
     public static func reportURL(question: String?, answer: String) -> URL? {
         var body = "What's wrong with this answer?\n\n\n---\n"

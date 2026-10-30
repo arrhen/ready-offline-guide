@@ -28,3 +28,13 @@ public enum Lookup {
                         needsCaution: level == .caution)
     }
 }
+
+extension Lookup {
+    /// For a question the emergency screen stopped, after the person has explicitly asked and confirmed:
+    /// text from files they added, and nothing else. No guide is searched and no model is involved, so
+    /// Ready writes none of what is shown. The emergency screen is deliberately not applied here, because
+    /// it already ran and the person chose to continue.
+    public static func ownFilesOnly(_ question: String, library: UserLibrary?) -> [UserPassage] {
+        library?.search(question.trimmingCharacters(in: .whitespacesAndNewlines)) ?? []
+    }
+}

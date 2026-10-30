@@ -35,6 +35,8 @@ not selectable in the app. A notice shown before the first
 import says to add only files the user owns or has permission to use. Imported files are kept out of
 iCloud backup unless the user turns it on.
 
+**Emergency questions.** Questions that look like emergencies get a fixed reply telling the person to call emergency services. The app does not answer them. If the user has added their own files, a link below the reply lets them choose, after a confirmation, to see matching text from those files exactly as written, labelled as not reviewed. No guide is searched and no generated text is produced for these questions.
+
 **Encryption.** HTTPS only (model downloads). ITSAppUsesNonExemptEncryption is NO.
 
 **No login is needed.** There are no accounts.

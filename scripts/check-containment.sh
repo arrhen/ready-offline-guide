@@ -50,6 +50,10 @@ fi
 loaders=$(grep -rlE 'LlamaEngine\.load\(|llama_model_load' Packages/ReadyCore/Sources App | grep -vE 'LlamaEngine.swift|ChatSession.swift' || true)
 [[ -z "$loaders" ]] || bad "a model is loaded outside ChatSession: $loaders"
 
+# 6a. The emergency opt-in must stay own-files-only: no guide search and no model in it.
+fn=$(sed -n '/static func ownFilesOnly/,/^    }/p' Packages/ReadyCore/Sources/ReadyCore/Lookup.swift)
+if echo "$fn" | grep -qE 'pack|GuidePack|LlamaEngine|ChatSession'; then bad "ownFilesOnly touches guides or the model"; fi
+
 # 6. No sharing or exporting. Files people add never leave the phone: no share sheet, no export, no
 #    drag-out, no pasteboard, no mail composer with attachments.
 hits=$(grep -rnE 'ShareLink|UIActivityViewController|fileExporter|UIDocumentInteractionController|UIPasteboard|NSItemProvider|Transferable|MFMailComposeViewController|\.draggable|onDrag\(' $SRC || true)
