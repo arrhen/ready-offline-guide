@@ -74,7 +74,7 @@ searched with the guides.
   (`mtmd`). Nothing calls it. A custom build could leave it out.
 - **Release builds link the llama framework but nothing in the interface can reach it** until guides
   are reviewed (see LIABILITY.md). The framework (about 70 MB) and the increased-memory entitlement
-  still ship, and App Review may ask what the entitlement is for. Decide that before submission.
+  still ship. The increased-memory entitlement is not requested in Release builds while there is no model (see `project.yml`).
   Everything above applies to preview builds and to the future release.
 - **The input defence is a list of known markers.** `neutralized` breaks apart Qwen3's markers. That is
   complete for Qwen3, and a test fails if a model from another family is added, but a list can miss

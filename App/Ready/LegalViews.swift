@@ -1,6 +1,17 @@
 import SwiftUI
 import ReadyCore
 
+/// What this build contains, so the notices describe only that. Models exist in preview builds only.
+var legalFeatures: Legal.Features {
+    #if DEBUG
+    let hasModel = true
+    #else
+    let hasModel = false
+    #endif
+    let hasGuides = !(GuidePack.bundled()?.guides().isEmpty ?? true)
+    return Legal.Features(hasModel: hasModel, hasGuides: hasGuides)
+}
+
 /// Emergency number wording for the device's region setting (not its location).
 var emergencyNumberText: String {
     EmergencyNumber.phrase(forRegion: Locale.current.region?.identifier)
@@ -16,7 +27,7 @@ struct AcknowledgementView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Before you start")
                         .font(.largeTitle.bold())
-                    ForEach(Legal.keyPoints(emergency: emergencyNumberText), id: \.self) { point in
+                    ForEach(Legal.keyPoints(emergency: emergencyNumberText, features: legalFeatures), id: \.self) { point in
                         Label {
                             Text(point)
                         } icon: {
@@ -47,11 +58,11 @@ struct AboutView: View {
     var body: some View {
         List {
             Section {
-                ForEach(Legal.keyPoints(emergency: emergencyNumberText), id: \.self) { Text($0) }
+                ForEach(Legal.keyPoints(emergency: emergencyNumberText, features: legalFeatures), id: \.self) { Text($0) }
             } header: {
                 Text("Please remember")
             }
-            ForEach(Legal.sections(emergency: emergencyNumberText), id: \.title) { section in
+            ForEach(Legal.sections(emergency: emergencyNumberText, features: legalFeatures), id: \.title) { section in
                 Section(section.title) { Text(section.body) }
             }
             Section {

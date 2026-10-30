@@ -35,6 +35,11 @@ Guides live in `Guides/` as Markdown with source and licence details in the fron
 `scripts/build-pack.py` turns them into a SQLite search index; `scripts/check-release.sh` fails if
 any guide has not been cleared for release. See `docs/CONTENT_SOURCES.md`.
 
+## Releasing
+
+The first App Store release is files-only (no guides, model or chat). See [docs/RELEASE.md](docs/RELEASE.md)
+for the build steps and checks, and [docs/OUTREACH.md](docs/OUTREACH.md) for free checks to run yourself.
+
 ## Not a medical device
 
 A small model can be wrong. Ready answers only from its guides and shows the guide passage under every answer. For anything serious, call your local emergency number.

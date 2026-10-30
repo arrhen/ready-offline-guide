@@ -32,7 +32,7 @@ public final class ChatSession {
 
     /// Shown instead of an answer when no guide covers the question. The model is not asked.
     public static func noGuideReply(emergency: String) -> String {
-        "I don't have a guide that covers that, so I won't guess. Ready only answers from the guides it includes. Try different words, or browse the guides below. In an emergency, call \(emergency)."
+        "Nothing on this phone matches that, so Ready won't guess. Try different words. In an emergency, call \(emergency)."
     }
 
     /// Loads the model. Does nothing if one is already loaded.

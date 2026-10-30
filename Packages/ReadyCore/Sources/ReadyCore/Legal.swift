@@ -32,18 +32,44 @@ public enum EmergencyNumber {
 /// The wording shown in the app. Bump `version` when the meaning changes, so people are asked
 /// to read it again.
 public enum Legal {
-    public static let version = 2
+    /// Bump when the wording changes in meaning, so people are shown the notice again.
+    public static let version = 3
     public static let contactEmail = "privacy@arrhen.me"
 
-    public static func keyPoints(emergency: String) -> [String] {
-        [
-            "Ready is a reference tool, not a substitute for professional help.",
-            "Guides can be incomplete or out of date. Answers written by the on-device model can be wrong.",
+    /// What this build contains. The notices describe only what is actually in the build: a files-only
+    /// release must not talk about a model, downloads or guides it does not have.
+    public struct Features: Equatable, Sendable {
+        public var hasModel: Bool
+        public var hasGuides: Bool
+
+        public init(hasModel: Bool, hasGuides: Bool) {
+            self.hasModel = hasModel
+            self.hasGuides = hasGuides
+        }
+
+        public static let filesOnly = Features(hasModel: false, hasGuides: false)
+        public static let everything = Features(hasModel: true, hasGuides: true)
+    }
+
+    public static func keyPoints(emergency: String, features: Features = .everything) -> [String] {
+        var points = ["Ready is a reference tool, not a substitute for professional help."]
+        switch (features.hasGuides, features.hasModel) {
+        case (true, true):
+            points.append("Guides can be incomplete or out of date. Answers written by the on-device model can be wrong.")
+        case (true, false):
+            points.append("Guides can be incomplete or out of date.")
+        case (false, true):
+            points.append("Answers written by the on-device model can be wrong, and the files they draw on haven't been reviewed.")
+        case (false, false):
+            points.append("Ready shows text from files you add, exactly as written. It hasn't reviewed them, and they can be incomplete, out of date or wrong.")
+        }
+        points += [
             "Don't use Ready to diagnose or treat a medical condition. Check with a doctor before making medical decisions.",
             "In a life-threatening situation, call \(emergency) first.",
             "Files you add stay on this phone and are your responsibility. Add only what you have the right to use.",
             "You use Ready at your own risk.",
         ]
+        return points
     }
 
     public struct Section: Sendable {
@@ -51,22 +77,49 @@ public enum Legal {
         public let body: String
     }
 
-    public static func sections(emergency: String) -> [Section] {
-        [
+    public static func sections(emergency: String, features: Features = .everything) -> [Section] {
+        let what: String
+        switch (features.hasGuides, features.hasModel) {
+        case (false, false): what = "searches files you add, on your phone"
+        case (true, false): what = "collects reference material and searches it, with files you add, on your phone"
+        case (false, true): what = "searches files you add and runs a small language model on your phone"
+        case (true, true): what = "collects reference material and runs a small language model on your phone"
+        }
+        var accuracy = features.hasGuides
+            ? "Guides show their source and date, but they can be incomplete, out of date or not right for your country or situation. "
+            : "Ready shows text from files you add exactly as written. It hasn't reviewed them, and they can be incomplete, out of date or wrong. "
+        if features.hasModel {
+            accuracy += "Answers written by the model are generated text. A small model can sound confident and still be wrong, so check anything that matters against the source text and with a professional."
+        } else {
+            accuracy += "Check anything that matters with a qualified professional."
+        }
+
+        var network = "The only network use is downloading models or guide packs when you ask it to."
+        var report = "If you choose \"Report this answer\", Ready opens a draft email containing that question and answer. Nothing is sent unless you send it."
+        if !features.hasModel {
+            network = "This version makes no network requests of its own."
+            report = "If you choose \"Report a problem\", Ready opens a draft email. Nothing is sent unless you send it."
+        }
+        let privacy = "Ready has no accounts and collects no data. Your files and searches stay on your phone. \(network) Files you add are never sent anywhere. \(report)"
+
+        var sources = features.hasGuides
+            ? "Any guides included in Ready come from public-domain and openly licensed sources, and say where they came from. "
+            : ""
+        sources += "Ready is not affiliated with or endorsed by any government agency or publisher. The app includes the open-source llama.cpp library (MIT licence)"
+        sources += features.hasModel ? " and runs Qwen3 models (Apache 2.0)." : "."
+        sources += " Full notices are in the project's THIRD_PARTY_NOTICES file."
+
+        return [
             Section(title: "Not professional advice",
-                    body: "Ready is free, open-source software that collects reference material and runs a small language model on your phone. It is not medical, legal, safety or emergency advice, and it does not create any professional relationship. Always get help from a qualified person where you can, and call \(emergency) in an emergency."),
-            Section(title: "Accuracy",
-                    body: "Guides show their source and date, but they can be incomplete, out of date or not right for your country or situation. Answers written by the model are generated text. A small model can sound confident and still be wrong, so check anything that matters against the source guide and with a professional."),
+                    body: "Ready is free, open-source software that \(what). It is not medical, legal, safety or emergency advice, and it does not create any professional relationship. Always get help from a qualified person where you can, and call \(emergency) in an emergency."),
+            Section(title: "Accuracy", body: accuracy),
             Section(title: "No warranty",
                     body: "Ready is provided \"as is\" under the MIT licence, without warranty of any kind. To the extent the law allows, the authors are not liable for any loss, injury or damage arising from using it."),
-            Section(title: "Privacy",
-                    body: "Ready has no accounts and collects no data. Your questions and the answers stay on your phone. The only network use is downloading models or guide packs when you ask it to. Files you add are never sent anywhere. If you choose \"Report this answer\", Ready opens a draft email containing that question and answer. Nothing is sent unless you send it."),
+            Section(title: "Privacy", body: privacy),
             Section(title: "Files you add",
                     body: "You can add text, Markdown and PDF files so Ready can search them. Add only files you own or have permission to use. Ready keeps only the text it reads from them, on this phone. It never uploads, shares or exports your files, and it doesn't open locked or copy-protected files. They are not backed up to iCloud unless you turn that on in Settings. Ready hasn't reviewed anything you add, and answers drawn from your files are only as good as the files. You are responsible for what you add and how you use it."),
-            Section(title: "Sources and licences",
-                    body: "Any guides included in Ready come from public-domain and openly licensed sources, and say where they came from. Ready is not affiliated with or endorsed by any government agency. The app uses llama.cpp (MIT licence) and Qwen3 models (Apache 2.0). Full notices are in the project's THIRD_PARTY_NOTICES file."),
-            Section(title: "Contact",
-                    body: "Questions or problems: \(contactEmail)."),
+            Section(title: "Sources and licences", body: sources),
+            Section(title: "Contact", body: "Questions or problems: \(contactEmail)."),
         ]
     }
 

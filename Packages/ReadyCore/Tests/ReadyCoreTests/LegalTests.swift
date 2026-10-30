@@ -45,7 +45,7 @@ import Testing
     }
 
     @Test func theNoticeIsVersionedAndCoversFilesThePersonAdds() {
-        #expect(Legal.version >= 2)
+        #expect(Legal.version >= 3)
         let files = Legal.sections(emergency: "911").first { $0.title == "Files you add" }
         let body = files?.body ?? ""
         for phrase in ["permission to use", "never uploads, shares or exports", "locked or copy-protected", "iCloud", "responsible"] {
@@ -53,6 +53,26 @@ import Testing
         }
         #expect(Legal.keyPoints(emergency: "911").joined().contains("your responsibility"))
         #expect(Legal.importNotice.contains("permission to use"))
+    }
+
+    @Test func aFilesOnlyBuildNeverMentionsAModelDownloadsOrGuides() {
+        let text = (Legal.keyPoints(emergency: "911", features: .filesOnly)
+                    + Legal.sections(emergency: "911", features: .filesOnly).flatMap { [$0.title, $0.body] })
+            .joined(separator: " ").lowercased()
+        for word in ["language model", "model", "download", "guide", "qwen", "report this answer"] {
+            #expect(!text.contains(word), Comment(rawValue: "files-only text mentions '\(word)'"))
+        }
+        // What it must still say.
+        for phrase in ["no network requests of its own", "your files", "not a substitute for professional help", "llama.cpp"] {
+            #expect(text.contains(phrase), Comment(rawValue: phrase))
+        }
+    }
+
+    @Test func aBuildWithModelsAndGuidesStillDescribesThem() {
+        let text = (Legal.keyPoints(emergency: "911") + Legal.sections(emergency: "911").map(\.body)).joined(separator: " ")
+        for phrase in ["on-device model", "downloading models", "Qwen3", "Guides can be incomplete"] {
+            #expect(text.contains(phrase), Comment(rawValue: phrase))
+        }
     }
 
     @Test func reportLinkIsAMailtoWithTheAnswer() throws {

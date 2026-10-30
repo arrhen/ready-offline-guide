@@ -36,6 +36,8 @@ struct HomeView: View {
     }
     #endif
 
+    private var hasGuides: Bool { !(pack?.guides().isEmpty ?? true) }
+
     var body: some View {
         let guides = pack?.guides() ?? []
         NavigationStack {
@@ -95,7 +97,7 @@ struct HomeView: View {
         Section {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("What do you need to know?", text: $query)
+                TextField(hasGuides ? "What do you need to know?" : "Search your files", text: $query)
                     .focused($fieldFocused)
                     .submitLabel(.search)
                     .onSubmit(ask)
@@ -113,7 +115,8 @@ struct HomeView: View {
                 }
             }
         } footer: {
-            Text("Searches the guides and your files on this phone. Nothing leaves it.")
+            Text(hasGuides ? "Searches the guides and your files on this phone. Nothing leaves it."
+                           : "Searches your files on this phone. Nothing leaves it.")
         }
     }
 
@@ -204,10 +207,9 @@ struct HomeView: View {
     // MARK: Guides
 
     @ViewBuilder private func guidesSection(_ guides: [Guide]) -> some View {
+        // A files-only build has no guides, so the section is left out rather than shown empty.
+        if !guides.isEmpty {
         Section {
-            if guides.isEmpty {
-                Text("No guides are included in this build yet.").foregroundStyle(.secondary)
-            }
             ForEach(guides) { guide in
                 NavigationLink {
                     GuideView(guide: guide, sections: pack?.sections(of: guide.id) ?? [])
@@ -218,9 +220,8 @@ struct HomeView: View {
         } header: {
             Text("Guides")
         } footer: {
-            if !guides.isEmpty {
-                Text("Reproduced from public sources. They can be out of date.")
-            }
+            Text("Reproduced from public sources. They can be out of date.")
+        }
         }
     }
 

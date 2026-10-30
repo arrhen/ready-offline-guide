@@ -20,6 +20,15 @@ targets:
   Ready:
     type: application
     platform: iOS
+    preBuildScripts:
+      - name: Release checks (archive only)
+        script: |
+          # Runs scripts/check-release.sh when archiving, so an archive cannot ship unreviewed guides or
+          # a model path that can reach the network. Normal builds skip it.
+          if [ "$ACTION" = "install" ]; then
+            "$SRCROOT/scripts/check-release.sh"
+          fi
+        basedOnDependencyAnalysis: false
     sources:
       - path: App/Ready
         excludes:
@@ -38,10 +47,12 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         TARGETED_DEVICE_FAMILY: "1"
         DEVELOPMENT_TEAM: ""
-      configs:
-        # The Best tier needs more memory than iOS normally allows an app. The capability needs a
-        # paid developer account, so Debug builds (including free Personal Teams) leave it out.
-        Release:
-          CODE_SIGN_ENTITLEMENTS: App/Ready/Ready.entitlements
+      # The increased-memory-limit entitlement (App/Ready/Ready.entitlements) is for the 4B model on 8 GB
+      # phones. Release builds have no model yet, so they do not request it. Restore this block when
+      # models ship, and enable the capability for the App ID in the developer portal first:
+      #   configs:
+      #     Release:
+      #       CODE_SIGN_ENTITLEMENTS: App/Ready/Ready.entitlements

@@ -129,7 +129,7 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         session.send("How do I treat a burn?")
         // Answered immediately and synchronously: no generation was started.
         #expect(session.status == .ready)
-        #expect(session.messages.last?.content.hasPrefix("I don't have a guide") == true)
+        #expect(session.messages.last?.content.hasPrefix("Nothing on this phone") == true)
         #expect(session.messages.last?.sources.isEmpty == true)
     }
 
