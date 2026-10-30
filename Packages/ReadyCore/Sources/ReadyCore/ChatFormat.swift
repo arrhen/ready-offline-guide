@@ -20,13 +20,17 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
     public var context: String?
     /// The passages an answer was based on, shown under it.
     public var sources: [Passage]
+    /// Passages from files the person added, shown under an answer with their own label.
+    public var fileSources: [UserPassage]
 
-    public init(id: UUID = UUID(), role: ChatRole, content: String, context: String? = nil, sources: [Passage] = []) {
+    public init(id: UUID = UUID(), role: ChatRole, content: String, context: String? = nil,
+                sources: [Passage] = [], fileSources: [UserPassage] = []) {
         self.id = id
         self.role = role
         self.content = content
         self.context = context
         self.sources = sources
+        self.fileSources = fileSources
     }
 }
 
@@ -34,8 +38,8 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
 /// assistant tag turns off their slow "thinking" mode so answers start straight away.
 public enum ChatFormat {
     public static let systemPrompt = """
-        You are Ready, an offline reference guide. You are given excerpts from official guides. \
-        Answer using ONLY those excerpts, in short, plain steps, keeping numbers, amounts and \
+        You are Ready, an offline reference tool. You are given excerpts from guides and from files the \
+        person added. Answer using ONLY those excerpts, in short, plain steps, keeping numbers, amounts and \
         times exactly as written. If the excerpts do not answer the question, say you don't know. \
         Do not diagnose illnesses or injuries and do not give medication names or doses. For \
         anything medical or life-threatening, say to call the local emergency number first.

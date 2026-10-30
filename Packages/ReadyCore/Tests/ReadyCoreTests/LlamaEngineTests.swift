@@ -97,7 +97,7 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         try store.prepare()
         try FileManager.default.createSymbolicLink(at: store.fileURL(for: model),
                                                    withDestinationURL: URL(fileURLWithPath: modelPath!))
-        let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) })
+        let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) }, library: nil)
         await session.load(model: model, store: store,
                            settings: Recommender.settings(for: .batterySaver, ramClass: .gb4), useGPU: false)
         return session
@@ -172,7 +172,7 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         try store.prepare()
         try FileManager.default.createSymbolicLink(at: store.fileURL(for: model),
                                                    withDestinationURL: URL(fileURLWithPath: modelPath!))
-        let session = ChatSession()
+        let session = ChatSession(pack: nil, library: nil)
         let settings = Recommender.settings(for: .batterySaver, ramClass: .gb4)
         async let loading: Void = session.load(model: model, store: store, settings: settings, useGPU: false)
         try await Task.sleep(for: .milliseconds(50))
@@ -192,7 +192,7 @@ private let modelPath = ProcessInfo.processInfo.environment["READY_TEST_MODEL"]
         try store.prepare()
         try FileManager.default.createSymbolicLink(at: store.fileURL(for: model), withDestinationURL: URL(fileURLWithPath: modelPath!))
         for question in ["How long should I boil water?", "How much bleach do I add to a gallon of water?", "Where can I use a generator?", "How long does food stay cold in a freezer?"] {
-            let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) })
+            let session = ChatSession(pack: GuidePack.bundledURL.flatMap { try? GuidePack(path: $0.path, includesUncleared: true) }, library: nil)
             await session.load(model: model, store: store, settings: Recommender.settings(for: .balanced, ramClass: .gb6), useGPU: false)
             session.send(question)
             for _ in 0..<4000 where session.status == .generating { try await Task.sleep(for: .milliseconds(100)) }

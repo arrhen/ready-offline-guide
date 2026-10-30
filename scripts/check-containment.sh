@@ -7,7 +7,8 @@
 #      processes, load code, show web content or open links,
 #   3. no tool or function calling, and the model file's own chat template is never applied,
 #   4. no App Transport Security exceptions,
-#   5. only the chat session loads a model.
+#   5. only the chat session loads a model,
+#   6. nothing can share, export or send out a file or a library (files a person adds stay on the phone).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 fail=0
@@ -29,7 +30,7 @@ users=$(grep -rlE '\bURLSession|\bURLRequest|\bNWConnection|\bNWListener|\bCFStr
 [[ -z "$users" ]] || bad "network or web APIs used outside ModelDownloader.swift: $users"
 
 # 2b. The engine and everything that handles model text must not open anything or run anything.
-for f in LlamaEngine ChatSession ChatFormat SafeMarkdown GuidePack; do
+for f in LlamaEngine ChatSession ChatFormat SafeMarkdown GuidePack UserLibrary FileImporter Lookup; do
   file="Packages/ReadyCore/Sources/ReadyCore/$f.swift"
   hits=$(grep -nE 'Process\(|NSTask|dlopen|dlsym|posix_spawn|fork\(|system\(|popen|UIApplication|openURL|\.open\(|NSWorkspace|\bURLSession|FileHandle\(forWriting|\.write\(to' "$file" || true)
   [[ -z "$hits" ]] || bad "$file does something it should not: $hits"
@@ -48,6 +49,11 @@ fi
 # 5. Only the chat session loads a model.
 loaders=$(grep -rlE 'LlamaEngine\.load\(|llama_model_load' Packages/ReadyCore/Sources App | grep -vE 'LlamaEngine.swift|ChatSession.swift' || true)
 [[ -z "$loaders" ]] || bad "a model is loaded outside ChatSession: $loaders"
+
+# 6. No sharing or exporting. Files people add never leave the phone: no share sheet, no export, no
+#    drag-out, no pasteboard, no mail composer with attachments.
+hits=$(grep -rnE 'ShareLink|UIActivityViewController|fileExporter|UIDocumentInteractionController|UIPasteboard|NSItemProvider|Transferable|MFMailComposeViewController|\.draggable|onDrag\(' $SRC || true)
+[[ -z "$hits" ]] || bad "something could share or export content: $hits"
 
 if [[ $fail -ne 0 ]]; then exit 1; fi
 echo "Containment checks passed."

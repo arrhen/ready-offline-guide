@@ -25,6 +25,16 @@ The app is not a charity and does not solicit charitable donations.
 link to GitHub Sponsors, as permitted for the United States storefront by Guideline 3.1.1(a).
 The link is hidden on every other storefront, and when the storefront can't be determined.
 
+**Files the user adds (Guideline 5.2).** The app can search text, Markdown and PDF files that the user
+chooses from the Files picker. It keeps only the text it reads, on the device. Nothing is uploaded, shared
+or exported, there is no import from a URL, and the app does not download, convert or save media from any
+service, so it does not facilitate file sharing (5.2.3). It does not open password-locked or
+copy-protected PDFs. The only text bundled in the app consists of guides reproduced from US government publications, each
+credited to its publisher with its source page and date (5.2, 5.2.1). Text from a user's own files is
+not selectable in the app. A notice shown before the first
+import says to add only files the user owns or has permission to use. Imported files are kept out of
+iCloud backup unless the user turns it on.
+
 **Encryption.** HTTPS only (model downloads). ITSAppUsesNonExemptEncryption is NO.
 
 **No login is needed.** There are no accounts.

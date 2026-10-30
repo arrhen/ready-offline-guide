@@ -24,6 +24,29 @@ Checked 2026-10-29 against the code and the binaries, not from memory.
 | Is it single-purpose? | Yes: one system prompt (answer only from the supplied guide excerpts, no diagnosis, no doses), thinking switched off, and an emergency screen that sends medical and poisoning questions away before the model is involved. | `ChatFormat.systemPrompt`; `SafetyScreen` |
 | Are there App Transport Security exceptions? | None. Plain HTTP is refused. | step 4 |
 
+## Files people add
+
+People can add text, Markdown and PDF files, which are indexed on the phone (`UserLibrary`) and
+searched with the guides.
+
+- **Untrusted input.** Imported text is treated like any excerpt: control markers in it are broken apart
+  before the model sees it (`aFilesTextCannotForgeControlMarkersInThePrompt`), and the model has no tools.
+- **Parsing.** Plain text is decoded directly. PDFs are read with Apple's PDFKit, in the app's process, so
+  a malformed PDF could in principle crash the app or exploit a PDFKit bug. Mitigations: types are limited
+  to ones that need no archive unpacking (no zip-based formats: Word, EPUB and OpenDocument are not
+  supported), files over 100 MB, 3,000 pages or 10 million characters are refused, shortcuts
+  (symbolic links) are refused, and reading happens off the main thread.
+- **Protected files.** Password-locked PDFs and PDFs that forbid copying are refused. Ready never tries to
+  unlock or work around protection.
+- **Never leaves the phone.** There is no import from a URL, and nothing can share, export or send a file or
+  library (no share sheet, exporter, drag-out or pasteboard code). `check-containment.sh` step 6 fails if
+  that changes. Text from a person's files is not selectable in the app, so the system's Copy and Share menu
+  is not offered for it (guide text is selectable). The Debug-only "Report this answer" email can quote
+  file-derived text, so before chat ships it must leave out file passages or ask first.
+- **What is kept.** Only extracted text, in a database in the app's folder. No original file is copied.
+  Excluded from iCloud and device backups by default, with a toggle in Settings. "Delete all my files"
+  removes everything.
+
 ## What is not enforced, and why
 
 - **The weights still know how to do tool calls.** Qwen3 models are trained for them. Weights cannot be

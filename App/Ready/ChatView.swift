@@ -81,17 +81,22 @@ struct ChatView: View {
     }
 
     private func bubble(_ message: ChatMessage) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if message.role == .assistant, !message.sources.isEmpty, !message.content.isEmpty {
-                Label("Machine-written summary. Check the guide text below.", systemImage: "exclamationmark.triangle")
-                    .font(.caption).foregroundStyle(.orange)
-            }
-            bubbleText(message)
+        let hasSources = !message.sources.isEmpty || !message.fileSources.isEmpty
+        return VStack(alignment: .leading, spacing: 8) {
+            // The source text comes first: it is what to rely on. The summary sits beneath it.
             ForEach(Array(message.sources.enumerated()), id: \.element.id) { index, passage in
                 SourcePassageView(passage: passage, startsOpen: index == 0)
             }
-            if !message.sources.isEmpty, !message.content.isEmpty {
-                Text("The summary above was written by a small model and can be wrong. The guide text is what to rely on.")
+            ForEach(Array(message.fileSources.enumerated()), id: \.element.id) { index, passage in
+                UserPassageView(passage: passage, startsOpen: message.sources.isEmpty && index == 0)
+            }
+            if message.role == .assistant, hasSources, !message.content.isEmpty {
+                Label("Machine-written summary. Check the text above.", systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            bubbleText(message)
+            if hasSources, !message.content.isEmpty {
+                Text("The summary was written by a small model and can be wrong. The text above is what to rely on.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }

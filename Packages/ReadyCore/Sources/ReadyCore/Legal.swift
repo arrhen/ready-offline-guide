@@ -32,7 +32,7 @@ public enum EmergencyNumber {
 /// The wording shown in the app. Bump `version` when the meaning changes, so people are asked
 /// to read it again.
 public enum Legal {
-    public static let version = 1
+    public static let version = 2
     public static let contactEmail = "privacy@arrhen.me"
 
     public static func keyPoints(emergency: String) -> [String] {
@@ -41,6 +41,7 @@ public enum Legal {
             "Guides can be incomplete or out of date. Answers written by the on-device model can be wrong.",
             "Don't use Ready to diagnose or treat a medical condition. Check with a doctor before making medical decisions.",
             "In a life-threatening situation, call \(emergency) first.",
+            "Files you add stay on this phone and are your responsibility. Add only what you have the right to use.",
             "You use Ready at your own risk.",
         ]
     }
@@ -59,13 +60,18 @@ public enum Legal {
             Section(title: "No warranty",
                     body: "Ready is provided \"as is\" under the MIT licence, without warranty of any kind. To the extent the law allows, the authors are not liable for any loss, injury or damage arising from using it."),
             Section(title: "Privacy",
-                    body: "Ready has no accounts and collects no data. Your questions and the answers stay on your phone. The only network use is downloading models or guide packs when you ask it to. If you choose \"Report this answer\", Ready opens a draft email containing that question and answer. Nothing is sent unless you send it."),
+                    body: "Ready has no accounts and collects no data. Your questions and the answers stay on your phone. The only network use is downloading models or guide packs when you ask it to. Files you add are never sent anywhere. If you choose \"Report this answer\", Ready opens a draft email containing that question and answer. Nothing is sent unless you send it."),
+            Section(title: "Files you add",
+                    body: "You can add text, Markdown and PDF files so Ready can search them. Add only files you own or have permission to use. Ready keeps only the text it reads from them, on this phone. It never uploads, shares or exports your files, and it doesn't open locked or copy-protected files. They are not backed up to iCloud unless you turn that on in Settings. Ready hasn't reviewed anything you add, and answers drawn from your files are only as good as the files. You are responsible for what you add and how you use it."),
             Section(title: "Sources and licences",
                     body: "Any guides included in Ready come from public-domain and openly licensed sources, and say where they came from. Ready is not affiliated with or endorsed by any government agency. The app uses llama.cpp (MIT licence) and Qwen3 models (Apache 2.0). Full notices are in the project's THIRD_PARTY_NOTICES file."),
             Section(title: "Contact",
                     body: "Questions or problems: \(contactEmail)."),
         ]
     }
+
+    public static let importNoticeVersion = 1
+    public static let importNotice = "Only add files you own or have permission to use. Ready keeps the text of what you add on this phone. It doesn't upload, share or back it up unless you choose, and it doesn't open locked files."
 
     /// A pre-filled email for reporting a bad answer. The person sees and sends it themselves.
     public static func reportURL(question: String?, answer: String) -> URL? {

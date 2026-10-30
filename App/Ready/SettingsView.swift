@@ -4,6 +4,8 @@ import ReadyCore
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("appearance") private var appearanceRaw = AppearanceChoice.system.rawValue
+    @State private var includeInBackup = UserLibrary.shared?.includedInBackup ?? false
+    @State private var confirmDeleteFiles = false
     #if DEBUG
     // Models only exist in preview builds, so release builds never start the download session.
     @Bindable private var downloader = ModelDownloader.shared
@@ -24,6 +26,15 @@ struct SettingsView: View {
                     Text("System follows your phone's light or dark setting.")
                 }
 
+                Section {
+                    Toggle("Include in iCloud backup", isOn: $includeInBackup)
+                    Button("Delete all my files", role: .destructive) { confirmDeleteFiles = true }
+                } header: {
+                    Text("Your files")
+                } footer: {
+                    Text("Files you add stay on this phone and are kept out of iCloud and device backups unless you turn this on. If you lose the phone and they weren't backed up, you would need to add them again.")
+                }
+
                 #if DEBUG
                 modelSections
                 #endif
@@ -36,6 +47,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
+            .onChange(of: includeInBackup) { UserLibrary.shared?.includedInBackup = includeInBackup }
+            .confirmationDialog("Delete all your files?", isPresented: $confirmDeleteFiles, titleVisibility: .visible) {
+                Button("Delete all", role: .destructive) { UserLibrary.shared?.removeAll() }
+            } message: {
+                Text("This removes the text Ready kept from every file you added. Your original files are not touched.")
+            }
         }
     }
 

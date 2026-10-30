@@ -22,9 +22,12 @@ public final class ChatSession {
 
     /// The guides answers come from. Nil means nothing can be answered.
     @ObservationIgnored private let pack: GuidePack?
+    /// Files the person added. Searched with the guides.
+    @ObservationIgnored private let library: UserLibrary?
 
-    public init(pack: GuidePack? = GuidePack.bundled()) {
+    public init(pack: GuidePack? = GuidePack.bundled(), library: UserLibrary? = UserLibrary.shared) {
         self.pack = pack
+        self.library = library
     }
 
     /// Shown instead of an answer when no guide covers the question. The model is not asked.
@@ -74,26 +77,28 @@ public final class ChatSession {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let engine, status == .ready, !trimmed.isEmpty else { return }
         let emergency = EmergencyNumber.phrase(forRegion: Locale.current.region?.identifier)
-        let passages: [Passage]
-        switch pack?.lookup(trimmed) ?? .noMatch {
-        case .emergency:
+        let findings = Lookup.run(trimmed, pack: pack, library: library)
+        if findings.isEmergency {
             messages.append(ChatMessage(role: .user, content: trimmed))
             messages.append(ChatMessage(role: .assistant, content: SafetyScreen.reply(emergency: emergency)))
             answerError = nil
             return
-        case .noMatch:
+        }
+        if findings.isEmpty {
             messages.append(ChatMessage(role: .user, content: trimmed))
             messages.append(ChatMessage(role: .assistant, content: Self.noGuideReply(emergency: emergency)))
             answerError = nil
             return
-        case .passages(let found):
-            passages = found
         }
-        let excerpts = passages.enumerated().map { i, p in
+        var excerpts: [String] = findings.guides.enumerated().map { i, p in
             "[\(i + 1)] \(p.guide.title) - \(p.section.heading)\n\(p.section.body)"
-        }.joined(separator: "\n\n")
-        messages.append(ChatMessage(role: .user, content: trimmed, context: excerpts))
-        messages.append(ChatMessage(role: .assistant, content: "", sources: passages))
+        }
+        let offset = findings.guides.count
+        excerpts += findings.yours.enumerated().map { i, p in
+            "[\(offset + i + 1)] A file the person added: \(p.documentTitle) - \(p.heading)\n\(p.body)"
+        }
+        messages.append(ChatMessage(role: .user, content: trimmed, context: excerpts.joined(separator: "\n\n")))
+        messages.append(ChatMessage(role: .assistant, content: "", sources: findings.guides, fileSources: findings.yours))
         status = .generating
         answerError = nil
         let history = Array(messages.dropLast())

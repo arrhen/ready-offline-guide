@@ -1,16 +1,26 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import ReadyCore
 
-/// The first screen. One question field, then the guides themselves. It works with no model and
-/// no network: it searches the guides on the phone and shows the passages with their source.
+/// The first screen. One question field, then the guides and the person's own files. It works with no
+/// model and no network: it searches the text on the phone and shows the passages with their source.
 struct HomeView: View {
     private let pack = GuidePack.bundled()
+    private let library = UserLibrary.shared
 
     @State private var query = ""
     @State private var asked = ""
-    @State private var result: LookupResult?
+    @State private var findings: Findings?
     @State private var showSettings = false
     @FocusState private var fieldFocused: Bool
+
+    // Your files
+    @State private var documents: [UserDocument] = []
+    @State private var showNotice = false
+    @State private var showImporter = false
+    @State private var isImporting = false
+    @State private var importMessages: [String] = []
+    @AppStorage("importAckVersion") private var importAckVersion = 0
 
     #if DEBUG
     @State private var device = DeviceProfile.current()
@@ -28,8 +38,9 @@ struct HomeView: View {
         NavigationStack {
             List {
                 questionSection
-                if let result { resultSection(result) }
+                if let findings { resultSections(findings) }
                 guidesSection(guides)
+                filesSection
                 #if DEBUG
                 previewSection
                 #endif
@@ -41,11 +52,30 @@ struct HomeView: View {
                         .accessibilityLabel("Settings")
                 }
             }
-            .sheet(isPresented: $showSettings) { SettingsView() }
-            #if DEBUG
-            .onAppear { device = DeviceProfile.current() }
-            #endif
+            .sheet(isPresented: $showSettings, onDismiss: reloadDocuments) { SettingsView() }
+            .alert("Before you add files", isPresented: $showNotice) {
+                Button("Choose files") {
+                    importAckVersion = Legal.importNoticeVersion
+                    showImporter = true
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text(Legal.importNotice)
+            }
+            .fileImporter(isPresented: $showImporter, allowedContentTypes: Self.allowedTypes,
+                          allowsMultipleSelection: true, onCompletion: handleImport)
+            .onAppear {
+                reloadDocuments()
+                #if DEBUG
+                device = DeviceProfile.current()
+                #endif
+            }
         }
+    }
+
+    /// Local files only. The picker is the only way a file gets in.
+    private static var allowedTypes: [UTType] {
+        [.plainText, .pdf] + [UTType("net.daringfireball.markdown")].compactMap { $0 }
     }
 
     // MARK: Question
@@ -62,7 +92,7 @@ struct HomeView: View {
                     Button {
                         query = ""
                         asked = ""
-                        result = nil
+                        findings = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
@@ -71,7 +101,7 @@ struct HomeView: View {
                 }
             }
         } footer: {
-            Text("Searches the guides on this phone. Nothing leaves it.")
+            Text("Searches the guides and your files on this phone. Nothing leaves it.")
         }
     }
 
@@ -79,13 +109,12 @@ struct HomeView: View {
         let question = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty else { return }
         asked = question
-        result = pack?.lookup(question) ?? .noMatch
+        findings = Lookup.run(question, pack: pack, library: library)
         fieldFocused = false
     }
 
-    @ViewBuilder private func resultSection(_ result: LookupResult) -> some View {
-        switch result {
-        case .emergency:
+    @ViewBuilder private func resultSections(_ findings: Findings) -> some View {
+        if findings.isEmergency {
             Section {
                 Label {
                     Text(SafetyScreen.reply(emergency: emergencyNumberText))
@@ -93,26 +122,38 @@ struct HomeView: View {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 }
             }
-        case .noMatch:
+        } else if findings.isEmpty {
             Section {
                 Text(ChatSession.noGuideReply(emergency: emergencyNumberText))
             }
-        case .passages(let passages):
-            Section {
-                ForEach(Array(passages.enumerated()), id: \.element.id) { index, passage in
-                    SourcePassageView(passage: passage, startsOpen: index == 0)
-                }
-                #if DEBUG
-                if let model = selection.installed(in: downloader) {
-                    NavigationLink("Short answer (preview)") {
-                        ChatView(model: model, settings: selection.settings, initialQuestion: asked)
+        } else {
+            if !findings.guides.isEmpty {
+                Section {
+                    ForEach(Array(findings.guides.enumerated()), id: \.element.id) { index, passage in
+                        SourcePassageView(passage: passage, startsOpen: index == 0)
                     }
+                    #if DEBUG
+                    shortAnswerLink
+                    #endif
+                } header: {
+                    Text("From the guides")
+                } footer: {
+                    Text("This is the text of the guide. Check the source for anything that matters.")
                 }
-                #endif
-            } header: {
-                Text("From the guides")
-            } footer: {
-                Text("This is the text of the guide. Check the source for anything that matters.")
+            }
+            if !findings.yours.isEmpty {
+                Section {
+                    ForEach(Array(findings.yours.enumerated()), id: \.element.id) { index, passage in
+                        UserPassageView(passage: passage, startsOpen: index == 0 && findings.guides.isEmpty)
+                    }
+                    #if DEBUG
+                    if findings.guides.isEmpty { shortAnswerLink }
+                    #endif
+                } header: {
+                    Text("From your files")
+                } footer: {
+                    Text("From files you added. Ready hasn't reviewed them.")
+                }
             }
         }
     }
@@ -140,9 +181,90 @@ struct HomeView: View {
         }
     }
 
+    // MARK: Your files
+
+    private var filesSection: some View {
+        Section {
+            ForEach(documents) { document in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(document.title).font(.headline)
+                    Text("\(document.passageCount) \(document.passageCount == 1 ? "passage" : "passages") · added \(document.addedAt.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            .onDelete { offsets in
+                for index in offsets { library?.remove(documents[index]) }
+                reloadDocuments()
+            }
+            Button(action: addFilesTapped) {
+                Label("Add files", systemImage: "plus")
+            }
+            .disabled(isImporting || library == nil)
+            if isImporting {
+                HStack { ProgressView(); Text("Reading…").padding(.leading, 8) }
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(importMessages, id: \.self) { message in
+                Text(message).font(.footnote).foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Your files")
+        } footer: {
+            Text("Text, Markdown and PDF files. Only the text is kept, on this phone. Swipe a file to remove it.")
+        }
+    }
+
+    private func reloadDocuments() {
+        documents = library?.documents() ?? []
+    }
+
+    private func addFilesTapped() {
+        if importAckVersion < Legal.importNoticeVersion {
+            showNotice = true
+        } else {
+            showImporter = true
+        }
+    }
+
+    private func handleImport(_ result: Result<[URL], Error>) {
+        guard case .success(let urls) = result, !urls.isEmpty else { return }
+        isImporting = true
+        importMessages = []
+        Task {
+            var messages: [String] = []
+            for url in urls {
+                messages.append(await importOne(url))
+            }
+            importMessages = messages
+            isImporting = false
+            reloadDocuments()
+        }
+    }
+
+    private func importOne(_ url: URL) async -> String {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        do {
+            let imported = try await Task.detached(priority: .userInitiated) { try FileImporter.read(url) }.value
+            guard let library else { throw ImportError.unreadable }
+            try library.add(imported)
+            return "\(imported.title): added"
+        } catch {
+            return "\(url.lastPathComponent): \(error.localizedDescription)"
+        }
+    }
+
     // MARK: Preview-only model row
 
     #if DEBUG
+    @ViewBuilder private var shortAnswerLink: some View {
+        if let model = selection.installed(in: downloader) {
+            NavigationLink("Short answer (preview)") {
+                ChatView(model: model, settings: selection.settings, initialQuestion: asked)
+            }
+        }
+    }
+
     private var previewSection: some View {
         Section {
             NavigationLink { ModelsView() } label: {

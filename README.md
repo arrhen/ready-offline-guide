@@ -7,6 +7,7 @@ A free, open-source iPhone app that answers practical "what do I do?" questions 
 ## What it will do
 
 - **Guides and search:** search or read curated, openly licensed guides (first aid, water, shelter, fire, navigation, power outages) with no model at all.
+- **Your files:** add text, Markdown and PDF files and search them with the guides. Only the text is kept, on your phone: no copy of the file, no upload, no export, and it's kept out of iCloud backup unless you turn that on.
 - **Short answers (preview builds only):** a small on-device model summarizes the matching guide passages, and the passages are always shown. It is not a replacement for a professional or an emergency call.
 - **Set up in one tap:** the app checks your phone's memory and free space and recommends a model size and settings. Everything can be changed later.
 - **Fully offline** after the one-time download. No analytics, no accounts, no tracking.

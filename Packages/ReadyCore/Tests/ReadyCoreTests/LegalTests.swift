@@ -44,6 +44,17 @@ import Testing
         #expect(sections.contains { $0.body.contains(Legal.contactEmail) })
     }
 
+    @Test func theNoticeIsVersionedAndCoversFilesThePersonAdds() {
+        #expect(Legal.version >= 2)
+        let files = Legal.sections(emergency: "911").first { $0.title == "Files you add" }
+        let body = files?.body ?? ""
+        for phrase in ["permission to use", "never uploads, shares or exports", "locked or copy-protected", "iCloud", "responsible"] {
+            #expect(body.contains(phrase), Comment(rawValue: phrase))
+        }
+        #expect(Legal.keyPoints(emergency: "911").joined().contains("your responsibility"))
+        #expect(Legal.importNotice.contains("permission to use"))
+    }
+
     @Test func reportLinkIsAMailtoWithTheAnswer() throws {
         let url = try #require(Legal.reportURL(question: "How do I treat a burn?", answer: "Cool it."))
         #expect(url.scheme == "mailto")
