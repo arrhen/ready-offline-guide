@@ -130,6 +130,11 @@ public actor LlamaEngine {
         if !pending.isEmpty { output.yield(String(decoding: pending, as: UTF8.self)) }
     }
 
+    /// The token IDs the model would receive for a prompt. For tests.
+    func tokenIDs(for text: String) throws -> [Int32] {
+        try tokenize(text).map { Int32($0) }
+    }
+
     private func tokenize(_ text: String) throws -> [llama_token] {
         let utf8 = Array(text.utf8)
         var tokens = [llama_token](repeating: 0, count: utf8.count + 16)

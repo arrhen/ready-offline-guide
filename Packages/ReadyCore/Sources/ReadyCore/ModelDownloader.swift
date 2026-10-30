@@ -122,6 +122,10 @@ public final class ModelDownloader {
     /// Starts a download, or continues a paused or failed one.
     public func start(_ model: ModelOption) {
         guard !isInstalled(model), tasks[model.id] == nil else { return }
+        guard ModelCatalog.isAllowedSource(model.downloadURL) else {
+            states[model.id] = .failed("This model isn't available from a trusted source.")
+            return
+        }
         let free = DeviceProfile.current().freeStorageBytes
         guard free >= model.downloadBytes + Self.minimumFreeAfter else {
             states[model.id] = .failed("Not enough free space. Free up some storage and try again.")

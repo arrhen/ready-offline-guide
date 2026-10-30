@@ -122,11 +122,10 @@ struct ChatView: View {
         return session.messages[index - 1].content
     }
 
-    /// Small models answer in Markdown, so show bold and italics instead of raw asterisks.
+    /// Small models answer in Markdown, so show bold and italics instead of raw asterisks. Links and
+    /// images are removed: nothing the model writes may be tappable (see SafeMarkdown).
     private func rendered(_ message: ChatMessage) -> AttributedString {
-        if message.content.isEmpty { return AttributedString("…") }
-        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        return (try? AttributedString(markdown: message.content, options: options)) ?? AttributedString(message.content)
+        SafeMarkdown.render(message.content)
     }
 
     private var inputBar: some View {

@@ -76,6 +76,16 @@ public enum ModelCatalog {
         }
     }()
 
+    /// Models may only be fetched over HTTPS from these hosts, exactly. A file from anywhere else is
+    /// never downloaded, whatever the catalog says.
+    static let allowedHosts: Set<String> = ["huggingface.co"]
+
+    public static func isAllowedSource(_ url: URL) -> Bool {
+        guard url.scheme == "https", url.user == nil, url.password == nil, url.port == nil,
+              let host = url.host?.lowercased() else { return false }
+        return allowedHosts.contains(host)
+    }
+
     public static func option(for tier: Tier) -> ModelOption {
         all.first { $0.tier == tier }!
     }

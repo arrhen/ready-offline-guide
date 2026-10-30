@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Fails if any guide is not cleared, or if the shipped pack differs from the Markdown in Guides/.
+# Fails if the model could reach outside the app, if any guide is not cleared, or if the shipped
+# pack differs from the Markdown in Guides/.
 # Run before every App Store build.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+./scripts/check-containment.sh
 
 bad=$(grep -L '^clearance: cleared$' Guides/*.md || true)
 if [[ -n "$bad" ]]; then

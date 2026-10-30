@@ -32,6 +32,11 @@ whether to publish under a company rather than a personal account.
 | Region-specific advice | Emergency number shown for the device's region, generic text elsewhere | Content is US-centric; label packs by region |
 | Export compliance | HTTPS only; `ITSAppUsesNonExemptEncryption` is set to NO in the build | Confirm with the lawyer / App Store Connect questions |
 
+## Containment
+
+The on-device model is text in, text out, with no tools, network, links or memory. See
+CONTAINMENT.md for what enforces that and what does not.
+
 ## Release gating
 
 Guides are `pending` until cleared (see CONTENT_SOURCES.md). `scripts/check-release.sh` must pass

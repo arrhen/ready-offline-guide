@@ -50,9 +50,25 @@ public enum ChatFormat {
         for (i, message) in all.enumerated() where !message.content.isEmpty {
             let isLast = lastUser.map { $0 + 1 == i } ?? false
             let body = (isLast ? message.context : nil).map { "Guide excerpts:\n\($0)\n\nQuestion: \(message.content)" } ?? message.content
-            text += "<|im_start|>\(message.role.tag)\n\(body)<|im_end|>\n"
+            text += "<|im_start|>\(message.role.tag)\n\(neutralized(body))<|im_end|>\n"
         }
         return text + "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+    }
+
+    /// Control markers the model uses for turns, thinking and tools. Text from a person, from the model's
+    /// earlier answers or from a guide must never form them, or it could forge a system turn or a tool
+    /// call. The tokenizer reads special tokens out of text, so they are broken apart before it sees them.
+    static let controlTags = ["think", "tool_call", "tool_response", "tools"]
+
+    /// This list is for Qwen3 (ChatML) only. Any other model family uses different markers, and
+    /// `ContainmentTests.catalogOnlyHoldsModelsTheNeutralizerCovers` fails until this is extended.
+    static func neutralized(_ text: String) -> String {
+        var out = text.replacingOccurrences(of: "<|", with: "< |")
+        for tag in controlTags {
+            out = out.replacingOccurrences(of: "<\(tag)>", with: "< \(tag)>")
+            out = out.replacingOccurrences(of: "</\(tag)>", with: "< /\(tag)>")
+        }
+        return out
     }
 
     /// Splits off the longest prefix that is valid UTF-8, leaving an incomplete trailing
